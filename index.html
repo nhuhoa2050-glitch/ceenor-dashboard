@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ceenor AIOS — Bảng Điều Khiển Multi-Agent + CRM</title>
+<style>
+  :root{--bg:#f7f4fb;--panel:#fff;--ink:#1f2430;--muted:#6b7280;--line:#ece8f3;--brand:#7c3aed;--brand2:#a855f7;
+    --green:#16a34a;--amber:#d97706;--red:#dc2626;--blue:#0ea5e9;--shadow:0 1px 2px rgba(20,12,40,.05),0 8px 24px rgba(80,40,140,.07)}
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);
+    background:linear-gradient(160deg,#faf7ff,#f3eefb 40%,#fdeef3);display:flex;min-height:100vh}
+  .side{width:232px;flex:0 0 232px;background:#1c1530;color:#cdc6dd;padding:18px 14px;display:flex;flex-direction:column;gap:3px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;color:#fff;margin:4px 6px 16px}
+  .brand .logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center}
+  .scat{font-size:10px;letter-spacing:.12em;color:#7a7090;margin:14px 8px 5px;text-transform:uppercase}
+  .nav{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;font-size:14px;color:#cdc6dd}
+  .nav:hover{background:#2a2046;color:#fff} .nav.active{background:#3a2c5e;color:#fff} .nav .ic{width:18px;text-align:center}
+  .nav .badge{margin-left:auto;background:#4a3a72;color:#fff;border-radius:20px;font-size:11px;padding:1px 8px}
+  .nav .badge.live{background:#16653f;color:#7ef0b0}
+  .realmode{margin-top:auto;background:#241a3c;border:1px solid #3a2c5e;border-radius:12px;padding:10px 12px}
+  .realmode b{color:#fff;font-size:13px;display:block} .realmode span{font-size:11px;color:#9b90b5}
+  .main{flex:1;padding:24px 28px;overflow:auto}
+  h1{font-size:22px;margin:0} .sub{color:var(--muted);font-size:13px;margin:3px 0 20px}
+  .view{display:none} .view.active{display:block}
+  .topcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 18px;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;min-width:260px}
+  .topcard .av{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:20px;color:#fff}
+  .topcard .nm{font-weight:700}.topcard .rl{font-size:12px;color:var(--muted)}
+  .org{display:flex;flex-direction:column;align-items:center}.stem{width:2px;height:24px;background:var(--line)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:6px}
+  .dot.green{background:var(--green)}.dot.amber{background:var(--amber)}.dot.red{background:var(--red)}
+  .depts{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;width:100%;margin-top:8px}
+  .dept{background:rgba(255,255,255,.55);border:1px solid var(--line);border-radius:16px;padding:14px}
+  .dept h3{margin:2px 0 12px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .tag{font-size:9px;font-weight:800;letter-spacing:.07em;padding:3px 7px;border-radius:6px;color:#fff}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:10px;cursor:pointer;display:flex;gap:11px;box-shadow:var(--shadow);transition:transform .08s,box-shadow .15s}
+  .card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(90,40,150,.14)}
+  .card .ci{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:17px;color:#fff;flex:0 0 34px}
+  .card .nm{font-weight:650;font-size:13.5px;display:flex;align-items:center}.card .ds{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:2px}
+  .guardian{background:linear-gradient(135deg,#f3ebff,#fbeef6);border:1px solid #e7d8fb}
+  .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+  .box h4{margin:0 0 8px;font-size:14px}.box p,.box li{font-size:13px;color:#374151;line-height:1.55}
+  .kpi{font-size:30px;font-weight:800;color:var(--brand)}.kpi small{font-size:12px;color:var(--muted);font-weight:500}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12.5px}
+  .pill{background:#f1ecfb;border:1px solid #e3d8f7;border-radius:20px;padding:5px 11px;font-weight:600}
+  a.link{color:var(--brand);text-decoration:none;font-weight:600}a.link:hover{text-decoration:underline}
+  code{background:#f3f0fa;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:12px}
+  /* CRM */
+  .crmbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+  .crmbar input{flex:1;min-width:180px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;background:#fff}
+  .btn{border:0;border-radius:9px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;background:var(--brand);color:#fff}
+  .btn:hover{background:#6d28d9}.btn.ghost{background:#f1ecfb;color:var(--brand)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+  .kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:900px){.kanban{grid-template-columns:1fr 1fr}}
+  .kcol{background:rgba(255,255,255,.55);border:1px solid var(--line);border-radius:14px;padding:12px;min-height:120px}
+  .kcol h4{margin:0 0 10px;font-size:13px;display:flex;align-items:center;justify-content:space-between}
+  .kcol .cnt{background:#eee;border-radius:20px;padding:1px 9px;font-size:11px;color:#555}
+  .lead{background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px;margin-bottom:9px;box-shadow:var(--shadow);cursor:pointer}
+  .lead .le{font-weight:650;font-size:13px}.lead .ls{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+  .src{font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:5px;color:#fff}
+  .src.kv{background:#7c3aed}.src.sh{background:#16a34a}.src.so{background:#0ea5e9}
+  .segwrap{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .seg{background:#f1ecfb;border:1px solid #e3d8f7;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:#4b3b72}
+  .statusline{font-size:12px;color:var(--muted);margin-bottom:14px}
+  .ov{position:fixed;inset:0;background:rgba(28,18,50,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .ov.open{display:flex}.modal{background:#fff;border-radius:18px;max-width:540px;width:100%;box-shadow:0 30px 80px rgba(30,10,60,.35);overflow:hidden;position:relative}
+  .mh{padding:18px 20px;display:flex;gap:13px;align-items:center;border-bottom:1px solid var(--line)}
+  .mh .mi{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:23px;color:#fff}
+  .mh .nm{font-weight:750;font-size:17px}.mh .rl{font-size:12px;color:var(--muted)}
+  .mb{padding:18px 20px;max-height:62vh;overflow:auto}.mb p{font-size:13.5px;line-height:1.6;color:#374151}
+  .meta{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 14px}.chip{font-size:11px;background:#f3f0fa;border:1px solid var(--line);border-radius:20px;padding:3px 10px;color:#4b3b72;font-weight:600}
+  .lbl{font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;margin:14px 0 6px}
+  .cmd{display:flex;gap:8px}.cmd input{flex:1;border:1px solid var(--line);border-radius:9px;padding:9px 11px;font-size:13px;font-family:ui-monospace,monospace;background:#faf8fe}
+  textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;font-family:inherit;resize:vertical;min-height:60px;background:#faf8fe}
+  .mx{position:absolute;top:14px;right:16px;cursor:pointer;color:#fff;font-size:22px;opacity:.85}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1530;color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;opacity:0;transition:opacity .25s;z-index:99}.toast.show{opacity:1}
+  @media(max-width:760px){.side{display:none}}
+</style>
+</head>
+<body>
+  <aside class="side">
+    <div class="brand"><div class="logo">◆</div> Ceenor AIOS</div>
+    <div class="scat">Workspace</div>
+    <div class="nav active" data-view="org"><span class="ic">🏢</span> Phòng ban <span class="badge" id="agentCount">13</span></div>
+    <div class="nav" data-view="crm"><span class="ic">👥</span> CRM <span class="badge live" id="crmBadge">live</span></div>
+    <div class="nav" data-view="task"><span class="ic">🤖</span> Giao việc <span class="badge live">AI</span></div>
+    <div class="nav" data-view="ceo"><span class="ic">👑</span> CEO Agent <span class="badge live">AI</span></div>
+    <div class="nav" data-view="company"><span class="ic">🏢</span> Phòng Ban <span class="badge live" id="deptBadge">6</span></div>
+    <div class="nav" data-view="log"><span class="ic">📓</span> Nhật ký <span class="badge live">mem</span></div>
+    <div class="nav" data-view="overview"><span class="ic">📊</span> Overview</div>
+    <div class="nav" data-view="mission"><span class="ic">🎯</span> Mission Control</div>
+    <div class="nav" data-view="war"><span class="ic">🔗</span> War Room</div>
+    <div class="scat">Hệ thống</div>
+    <div class="nav" data-view="history"><span class="ic">🗂️</span> History</div>
+    <div class="nav" data-view="settings"><span class="ic">⚙️</span> Settings</div>
+    <div class="realmode"><b>Chế độ: Live CRM</b><span>CRM đọc thật từ n8n webhook (Klaviyo). Click agent → copy lệnh /skill.</span></div>
+  </aside>
+
+  <main class="main">
+    <!-- ORG -->
+    <section class="view active" id="org">
+      <h1>Phòng ban</h1><div class="sub">Founder → CEO Orchestrator → 6 nhóm chuyên môn + Quality Guardian. 🤖 = đã chuyên hoá thành subagent (chạy độc lập). Bấm agent để xem chi tiết & giao việc.</div>
+      <div class="org">
+        <div class="topcard"><div class="av" style="background:linear-gradient(135deg,#f59e0b,#d97706)">👑</div><div><div class="nm">Founder</div><div class="rl">Người sở hữu hệ thống</div></div></div>
+        <div class="stem"></div>
+        <div class="topcard" style="cursor:pointer" onclick="openAgent('orchestrator')"><div class="av" style="background:linear-gradient(135deg,#7c3aed,#a855f7)">🧠</div><div><div class="nm">Strategic Orchestrator <span class="dot green"></span></div><div class="rl">/ceo-orchestrator · điều phối 6 subagent + 17 skill + 13 workflow n8n</div></div></div>
+        <div class="stem"></div>
+        <div class="depts" id="depts"></div>
+      </div>
+    </section>
+
+    <!-- CRM -->
+    <section class="view" id="crm">
+      <h1>CRM — Khách hàng</h1><div class="sub">Gom từ Klaviyo (live qua n8n webhook) + Shopify (orders/spent) + social. Click 1 lead để xem chi tiết.</div>
+      <div class="crmbar">
+        <input id="crmSearch" placeholder="🔍 Tìm email / tên / quốc gia..." oninput="renderCRM()">
+        <button class="btn" onclick="loadCRM(true)">↻ Làm mới (live)</button>
+      </div>
+      <div class="statusline" id="crmStatus">Đang tải...</div>
+      <div class="kpis" id="crmKpis"></div>
+      <div class="kanban" id="kanban"></div>
+      <div class="box" style="margin-top:18px"><h4>🏷️ Klaviyo Segments (9)</h4><div class="segwrap" id="segs"></div></div>
+    </section>
+
+    <!-- TASK ROOM -->
+    <section class="view" id="task">
+      <h1>Phòng Giao Việc 🤖</h1><div class="sub">Giao 1 việc → AI tự làm và báo cáo lại. Chạy bằng <b>Groq llama-3.3-70b</b> (free) qua n8n webhook.</div>
+      <div class="box">
+        <textarea id="taskBox" placeholder="VD: Viết 5 hook TikTok cho máy giặt mini... / Nghiên cứu 3 đối thủ máy giặt mini trên TikTok... / Lập kế hoạch content 7 ngày cho store Ceenor..." style="min-height:96px"></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="sendTask()">🚀 Giao việc</button>
+          <button class="btn ghost" onclick="document.getElementById('taskBox').value='';document.getElementById('taskResult').style.display='none'">Xoá</button>
+          <span id="taskStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="taskResult" style="margin-top:14px;display:none">
+        <h4>📋 Báo cáo từ AI</h4>
+        <div id="taskReply" style="white-space:pre-wrap;font-size:13.5px;line-height:1.65;color:#374151"></div>
+        <div style="margin-top:10px"><button class="btn ghost" onclick="copyText(document.getElementById('taskReply').textContent)">Copy báo cáo</button></div>
+      </div>
+      <div class="box" style="margin-top:14px"><h4>💡 Mẹo</h4><p style="font-size:12.5px;color:var(--muted)">Giao việc rõ ràng → kết quả tốt hơn. AI làm được: viết caption/hook/kịch bản, brainstorm, lập kế hoạch, tổng hợp ý tưởng. Việc cần web realtime thì AI sẽ nêu giả định (chưa nối search). Telegram: chờ bot token hợp lệ.</p></div>
+    </section>
+
+    <!-- CEO AGENT -->
+    <section class="view" id="ceo">
+      <h1>Master CEO Agent 👑</h1><div class="sub">Quét dữ liệu thật (CRM + vận hành) → phân tích chéo → báo cáo chiến lược ngắn gọn + chờ bạn Duyệt. Chạy Groq llama-3.3-70b. Không bịa số liệu.</div>
+      <div class="box">
+        <input id="ceoInput" placeholder="Yêu cầu cho CEO (để trống = tổng hợp tình hình tổng thể)..." style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff">
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" onclick="genCEO()">📊 Báo cáo CEO (nhanh)</button><button class="btn" style="background:#16a34a" onclick="genRun()">▶️ Chạy cả công ty (4 phòng → CEO)</button><span id="ceoStatus" style="font-size:12px;color:var(--muted)"></span></div>
+      </div>
+      <div class="box" id="ceoResult" style="margin-top:14px;display:none">
+        <div id="ceoReport" style="white-space:pre-wrap;font-size:14px;line-height:1.7;color:#2d3436"></div>
+        <div style="margin-top:14px;display:flex;gap:8px"><button class="btn" style="background:#16a34a" onclick="approveCEO()">✅ Duyệt → giao phòng ban thực thi</button><button class="btn ghost" onclick="document.getElementById('ceoResult').style.display='none';toast('❌ Đã Huỷ')">❌ Huỷ</button></div>
+        <div id="dispatchBox" style="display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:8px">🔒 <b>Chế độ An toàn:</b> phòng ban chỉ <b>tạo bản nháp/nội dung</b> để bạn xem — không gửi email, không đăng bài, không chi tiền. Chọn phòng nhận đề xuất đã duyệt:</div>
+          <div id="dispatchDepts" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+          <div id="dispatchStatus" style="font-size:12px;color:var(--muted);margin-top:10px"></div>
+          <div id="dispatchResult" style="display:none;margin-top:12px;background:#f7f8fa;border-radius:10px;padding:12px;white-space:pre-wrap;font-size:13px;line-height:1.65;color:#2d3436"></div>
+        </div>
+      </div>
+      <div class="box" style="margin-top:14px"><h4>🏢 Cơ cấu (Trụ cột 1: chuyên môn hoá)</h4><p style="font-size:12.5px;color:var(--muted)">CEO Agent điều phối 3 agent phòng ban: <b>Finance Controller</b> (Daily P&L), <b>Design Director</b> (/design-system + L2 render), <b>Operations Manager</b> (n8n pipeline). Mỗi agent 1 vai trò riêng → chống quá tải & hallucination. Chi tiết: agents-org.md</p></div>
+    </section>
+
+    <!-- COMPANY / DEPARTMENTS -->
+    <section class="view" id="company">
+      <h1>Phòng Ban — Công ty AI 🏢</h1><div class="sub">Mỗi phòng là 1 agent chuyên trách (Groq llama-3.3, free), báo cáo lên 👑 CEO Agent. Bấm 1 phòng → giao việc → nhận báo cáo. Trụ cột 1: chuyên môn hoá.</div>
+      <div class="depts" id="companyGrid"></div>
+    </section>
+
+    <!-- LOG / MEMORY -->
+    <section class="view" id="log">
+      <h1>Nhật ký công ty 📓</h1><div class="sub">Trí nhớ hệ thống — mỗi lần "Chạy công ty" được ghi vào Google Sheet (briefing CEO + báo cáo phòng). CEO đọc lại lịch sử này ở lần chạy sau.</div>
+      <div class="crmbar"><button class="btn" onclick="loadLog()">↻ Tải nhật ký</button><span id="logStatus" style="font-size:12px;color:var(--muted)"></span></div>
+      <div id="logList"></div>
+    </section>
+
+    <!-- OVERVIEW -->
+    <section class="view" id="overview">
+      <h1>Overview</h1><div class="sub">Tổng quan hệ thống Ceenor.</div>
+      <div class="grid2">
+        <div class="box"><div class="kpi">7 <small>skill</small></div></div>
+        <div class="box"><div class="kpi">6 <small>workflow n8n</small></div></div>
+        <div class="box"><div class="kpi" id="ovCust" style="color:var(--blue)">… <small>khách (live)</small></div></div>
+        <div class="box"><div class="kpi" style="color:var(--amber)">1 <small>blocker (ảnh L2)</small></div></div>
+      </div>
+      <div class="box" style="margin-top:14px"><h4>Trạng thái</h4>
+        <p>✅ Pipeline kịch bản→ảnh→QA→publish đã thông. ✅ CRM API live (Klaviyo).<br>⚠️ <b>L2 render</b>: image-gen cần bật billing (Pollinations 402 / Gemini image 429). QA+retry+brake đã sẵn sàng.</p></div>
+    </section>
+
+    <!-- MISSION -->
+    <section class="view" id="mission">
+      <h1>Mission Control</h1><div class="sub">Dây chuyền & state machine.</div>
+      <div class="box"><h4>Pipeline nội dung</h4><div class="flow">
+        <span class="pill">📝 Form</span>→<span class="pill">L1 Scripting</span>→<span class="pill">Draft</span>→<span class="pill">L2 Render+QA</span>→<span class="pill">Materials Ready</span>→<span class="pill">🎬 Video</span>→<span class="pill">L3 Queue</span>→<span class="pill">To Publish</span>→<span class="pill">Posted</span>
+      </div></div>
+      <div class="box" style="margin-top:14px"><h4>Status machine</h4><p><code>Draft</code>→<code>Materials Ready</code>→<code>To Publish</code>→<code>Posted</code> · lỗi: <code>Draft_Retry</code>(≤2) · <code>QA_Rejected</code> · <code>Auto-Reject</code></p></div>
+    </section>
+
+    <!-- WAR ROOM -->
+    <section class="view" id="war"><h1>War Room</h1><div class="sub">Liên kết nhanh.</div><div class="grid2" id="links"></div></section>
+
+    <!-- HISTORY -->
+    <section class="view" id="history"><h1>History</h1><div class="sub">Mốc đã làm.</div>
+      <div class="box"><ul>
+        <li>Hợp nhất 6→5 workflow Ceenor; đồng bộ tab + status enum.</li>
+        <li>Nâng cấp L2: QA Gemini Vision + retry-cap + brake + schedule 15'.</li>
+        <li>Bắt bệnh base64 <code>filesystem-v2</code> → node Code; xác nhận image-gen cần billing.</li>
+        <li>Thêm skill <code>/n8n-engineer</code>.</li>
+        <li><b>Mới:</b> CRM API webhook live (Klaviyo) + dashboard v2 (CRM Kanban).</li>
+      </ul></div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="view" id="settings"><h1>Settings</h1><div class="sub">Cấu hình.</div>
+      <div class="box"><h4>Nguồn dữ liệu</h4><p>
+        n8n base: <code id="baseTxt"></code><br>
+        CRM webhook (live): <code id="crmTxt"></code><br>
+        Form kịch bản: <a class="link" id="formLink" target="_blank">mở form</a></p></div>
+      <div class="box" style="margin-top:14px"><h4>🔐 Bảo mật</h4><p>API key n8n là JWT full-quyền — nên revoke sau mỗi phiên dùng chung. CRM webhook không lộ key (chỉ trả dữ liệu đã lọc).</p></div>
+      <div class="box" style="margin-top:14px"><h4>Phase 2 (chưa làm)</h4><p>Sync Shopify orders + Meta lead-ads vào CRM (cần Shopify credential trong n8n). Hiện Shopify hiển thị từ snapshot.</p></div>
+    </section>
+  </main>
+
+  <div class="ov" id="ov" onclick="if(event.target===this)closeM()"><div class="modal"><span class="mx" onclick="closeM()">×</span>
+    <div class="mh"><div class="mi" id="mIc"></div><div><div class="nm" id="mNm"></div><div class="rl" id="mRl"></div></div></div>
+    <div class="mb" id="mBody"></div></div></div>
+  <div class="toast" id="toast"></div>
+
+<script>
+const N8N_BASE="https://srv-lhzd2.auto.123host.asia";
+const CRM_WEBHOOK=N8N_BASE+"/webhook/ceenor-crm";
+const TASK_WEBHOOK=N8N_BASE+"/webhook/ceenor-task";
+const CEO_WEBHOOK=N8N_BASE+"/webhook/ceenor-ceo";
+const DEPT_WEBHOOK=N8N_BASE+"/webhook/ceenor-dept";
+const RUN_WEBHOOK=N8N_BASE+"/webhook/ceenor-run";
+const FINANCE_WEBHOOK=N8N_BASE+"/webhook/ceenor-finance";
+const LOG_WEBHOOK=N8N_BASE+"/webhook/ceenor-log";
+const FIN={
+ url:'https://docs.google.com/spreadsheets/d/1cZpUUJBkjvLQqjjrsP-jTEW4aOi4x0tqcEJCUVGEP74/edit',
+ head:[['Mục tiêu DT','264.000.000 ₫/th'],['DT/ngày','8.800.000 ₫'],['AOV','700.000 ₫'],['Đơn cần/ngày','~13'],['CM','25% (min 23%)'],['Net target','15% · Thuế 20%'],['BEP','264tr ₫'],['ROAS min','6.67x'],['Định phí','66tr (25% DT)'],['Nhân sự','46tr · 7 người'],['Vốn/Hồi vốn','200tr · 6 th']],
+ costs:[['COGS','30%','35%','🟢'],['Phí thanh toán','3%','4%','🟢'],['Phí sàn TikTok','10%','12%','🟢'],['Ads','15%','30%','🟢'],['Affiliate/KOC','12%','5%','🔴'],['CP bán hàng','3%','5%','🟢'],['Khác','2%','3%','🟢'],['Định phí/DT','25%','6%','🔴']],
+ alerts:['🔴 Affiliate 12% > ngưỡng 5% — tránh cộng Ads cao + Affiliate cao (TikTok).','🔴 Định phí 25% > 6% DT — outsource KT / cắt SaaS / dùng 3PL.']
+};
+const DEPT_AGENTS=[
+ {key:'finance',name:'Kế toán & Tài chính',icon:'💰',color:'#16a34a',desc:'P&L, dòng tiền, chi phí, cảnh báo vượt định mức. Chính xác tuyệt đối, không bịa số.',
+  kpis:['264tr₫/th','~13 đơn/ngày','CM 25%','🔴 2 cảnh báo'],sources:['Bảng P&L/KPI (Google Sheet)','CRM CLV/orders','Daily P&L workflow'],
+  sop:['Tổng hợp DT & chi phí','Tính P&L / biên LN','Đối chiếu ngưỡng','Cảnh báo vượt định mức'],presets:['Đánh giá sức khoẻ tài chính','Phân tích 2 cảnh báo đỏ','Cần bao nhiêu đơn/ngày để đạt Net 15%?']},
+ {key:'ops',name:'Vận hành',icon:'⚙️',color:'#0891b2',desc:'Điều phối luồng giữa các phòng, gác cổng human-in-loop, việc đang tắc & chờ Duyệt.',
+  kpis:['11 workflow','L2 kẹt billing','Gác cổng Duyệt'],sources:['n8n executions','Error Log sheet','CRM'],
+  sop:['Theo dõi tiến độ agent','Điều phối luồng','Gác cổng human-in-loop'],presets:['Việc đang tắc?','Việc chờ Founder duyệt?','Trạng thái pipeline hôm nay']},
+ {key:'mkt',name:'Marketing',icon:'📣',color:'#d97706',desc:'Campaign, góc nội dung, kênh (TikTok/FB/Email), phễu reach→engage→convert + KPI.',
+  kpis:['9 segment Klaviyo','TikTok-first','phễu reach→convert'],sources:['CRM segment','Klaviyo','Meta ads'],
+  sop:['Chọn góc nội dung','Chọn kênh','Tối ưu phễu + KPI'],presets:['Campaign TikTok tuần này','Góc content cho khách VN','Kế hoạch email Klaviyo']},
+ {key:'sales',name:'Sales & CRM',icon:'🤝',color:'#7c3aed',desc:'Phễu khách Lead→VIP, follow-up theo stage & churn, khách giá trị cao.',
+  kpis:['Lead→VIP','churn %','CLV'],sources:['CRM live','Klaviyo predictive'],
+  sop:['Xếp phễu khách','Follow-up theo stage','Lọc khách giá trị cao'],presets:['Khách cần follow-up trước','Top khách giá trị cao','Kịch bản win-back']},
+ {key:'creative',name:'Sáng tạo & Nội dung',icon:'🎨',color:'#9333ea',desc:'Hook/kịch bản/caption + visual brief theo Brand DNA (quiet luxury, dorm bestie).',
+  kpis:['Brand DNA','quiet luxury','dorm bestie'],sources:['/design-system','L1 scripting','Brand rules'],
+  sop:['Nhận brief','Ý tưởng hook/kịch bản','Visual brief'],presets:['5 hook máy giặt mini','Kịch bản video 30s','Visual brief Facebook']},
+ {key:'product',name:'Sản phẩm',icon:'📦',color:'#0ea5e9',desc:'Catalog Shopify, bundle, định giá theo biên lợi nhuận.',
+  kpis:['Catalog Shopify','bundle','định giá'],sources:['Shopify','CRM','Bảng tài chính (AOV/COGS)'],
+  sop:['Theo dõi catalog','Đề xuất bundle','Định giá theo biên LN'],presets:['Đề xuất bundle bán chạy','Định giá sản phẩm mới','SKU nên đẩy mạnh']},
+];
+function finBoard(){
+  let h='<div class="lbl">📊 Bảng tài chính (kết nối Google Sheet)</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11.5px;margin-bottom:8px">'+FIN.head.map(x=>'<div style="background:#f3f0fa;border-radius:8px;padding:6px 9px"><b>'+x[1]+'</b><br><span style="color:#6b7280">'+x[0]+'</span></div>').join('')+'</div>';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="color:#6b7280"><td>Khoản</td><td>%DT</td><td>Ngưỡng</td><td></td></tr>'+FIN.costs.map(c=>'<tr style="border-top:1px solid #f0edf7"><td>'+c[0]+'</td><td>'+c[1]+'</td><td>'+c[2]+'</td><td>'+c[3]+'</td></tr>').join('')+'</table>';
+  h+='<div style="margin-top:8px">'+FIN.alerts.map(a=>'<div style="font-size:12px;color:#b91c1c;margin-bottom:3px">'+a+'</div>').join('')+'</div>';
+  h+='<div id="finLive" style="margin-top:8px;font-size:12px;color:var(--muted)">⏳ đang đọc số live từ sheet...</div>';
+  h+='<div style="margin-top:6px;display:flex;gap:10px;align-items:center"><a class="link" href="'+FIN.url+'" target="_blank">↗ Mở sheet gốc</a><a class="link" style="cursor:pointer" onclick="var r=document.getElementById(\'finRaw\');r.style.display=r.style.display==\'none\'?\'block\':\'none\'">⤢ Xem số live</a></div>';
+  h+='<pre id="finRaw" style="display:none;white-space:pre-wrap;font-size:11px;background:#faf8fe;border:1px solid var(--line);border-radius:8px;padding:8px;max-height:200px;overflow:auto;margin-top:6px"></pre>';
+  return h;
+}
+async function loadFinLive(){
+  const el=document.getElementById('finLive'),raw=document.getElementById('finRaw');if(!el)return;
+  try{
+    const d=await (await fetch(FINANCE_WEBHOOK,{cache:'no-store'})).json();
+    el.innerHTML='🟢 Live từ Google Sheet · '+(d.rows||0)+' dòng · cập nhật '+new Date(d.fetchedAt||Date.now()).toLocaleString('vi-VN');
+    if(raw) raw.textContent=d.raw||'(rỗng)';
+  }catch(e){ el.innerHTML='🟡 Chưa đọc được sheet live ('+e.message+') — đang hiển thị benchmark.'; }
+}
+const FORM_URL=N8N_BASE+"/form/206a6e82-4cdf-402f-98a7-b28686634556";
+
+// Shopify snapshot (merge by email) — orders/spent
+const SHOPIFY={
+ "masoi7012@gmail.com":{orders:0,spent:0},
+ "test@ceenor.com":{orders:0,spent:0,name:"Test User"},
+ "ceenorglobal@gmail.com":{orders:0,spent:0,internal:true},
+ "nhuhoa2050@gmail.com":{orders:0,spent:0}
+};
+const SEGMENTS=["VIP Customers (Shopify)","Repeat Buyers (Shopify)","Potential Purchasers (Shopify)","Churn Risks (Shopify)","Win-Back Opportunities (Shopify)","New Subscribers","Engaged (30 Days)","Engaged (60 Days)","Engaged (90 Days)"];
+// fallback seed nếu fetch lỗi (CORS/offline)
+const SEED=[
+ {email:"masoi7012@gmail.com",name:"masoi7012",country:"Vietnam",lastEvent:"2026-06-04T16:43:16Z",orders:0,clv:0,source:"Klaviyo+Shopify"},
+ {email:"nhuhoa2050@gmail.com",name:"nhuhoa2050",country:"Vietnam",lastEvent:"2026-06-04T07:21:48Z",orders:0,clv:0,source:"Klaviyo+Shopify"},
+ {email:"test@ceenor.com",name:"Test User",country:"Germany",lastEvent:"2026-05-19T15:49:15Z",orders:1,clv:50,source:"Klaviyo+Shopify"},
+ {email:"ceenorglobal@gmail.com",name:"ceenorglobal",country:"",lastEvent:"",orders:0,clv:0,source:"Klaviyo+Shopify"}
+];
+
+// ---- agents/org ----
+const AGENTS={orchestrator:{name:"Master CEO Agent",role:"Giám đốc Điều hành Ảo",icon:"👑",color:"#7c3aed",type:"Workflow n8n",wf:"47ic7Qr9Ag0YLuTX",status:"green",desc:"Quét dữ liệu thật → phân tích chéo → đề xuất A/B/C + chờ Founder Duyệt. Hai tầng: (1) skill /ceo-orchestrator điều phối 6 subagent chuyên môn (Claude Code, chạy song song); (2) CEO Agent n8n (Groq) báo cáo nhanh + nút Duyệt dashboard. Mức An toàn: chỉ tạo nháp, việc ra ngoài/chi tiền chờ Founder."}};
+const DEPTS=[
+ {tag:"INTEL",color:"#0ea5e9",title:"1. Nghiên Cứu & Ý Tưởng",agents:[
+  {id:"idea-analyst",name:"Idea Analyst",icon:"💡",color:"#0ea5e9",type:"Skill",cmd:"/idea-analyst",status:"green",desc:"Làm rõ ý tưởng → content brief: platform, audience, tone, hook, CTA, KPI."},
+  {id:"data-scout",name:"Data Scout",icon:"🔭",color:"#0284c7",type:"Skill",cmd:"/data-scout",status:"green",desc:"Research topic/competitor/hashtag, scrape URL → báo cáo cấu trúc."},
+  {id:"web-crawler",name:"Crawl Engine",icon:"🕷️",color:"#0369a1",type:"Skill",cmd:"/web-crawler",status:"green",desc:"Crawl hàng loạt & site động bằng Crawlee (Cheerio/Playwright) → dataset JSON. Cho /data-scout phân tích."},
+  {id:"trend-hunter",name:"Trend Hunter",icon:"🔥",color:"#0284c7",type:"Skill",cmd:"/trend-hunter",status:"amber",desc:"Quét hashtag/sound/video viral TikTok US → góc content. ⚠️ TikTok-Api hay gãy + cần ms_token; có fallback web-crawler/data-scout."},
+  {id:"sourcing-scout",name:"Sourcing Scout",icon:"📦",color:"#0369a1",type:"Skill",cmd:"/sourcing-scout",status:"green",desc:"Cào giá/ship/rating supplier AliExpress/1688 (Crawlee Playwright) → chấm điểm chọn xưởng. Nối /finance-analyst tính landed cost. ⚠️ anti-bot."}]},
+ {tag:"CREATIVE",color:"#a855f7",title:"2. Sáng Tạo Nội Dung",agents:[
+  {id:"growth-engine",name:"Growth Engine",icon:"📈",color:"#a855f7",type:"Skill",cmd:"/growth-engine",status:"green",desc:"Caption/hook/CTA/hashtag cho FB, IG, Zalo."},
+  {id:"design-system",name:"Design Director",icon:"🎨",color:"#9333ea",type:"Skill",cmd:"/design-system",status:"green",desc:"Visual brief + image prompt (style, màu, typography, layout)."},
+  {id:"video-factory",name:"Video Factory",icon:"🎬",color:"#8b5cf6",type:"Skill",cmd:"/video-factory",status:"green",desc:"Render batch video 9:16 từ script: edge-tts (giọng US free) + ffmpeg ghép nền + phụ đề → MP4 sẵn đăng. ⚠️ cần ffmpeg; giọng TTS free hạn chế cảm xúc."}]},
+ {tag:"OPS·DEV",color:"#0891b2",title:"3. Tự Động Hoá & Kỹ Thuật",agents:[
+  {id:"n8n-engineer",name:"n8n Engineer",icon:"🛠️",color:"#0891b2",type:"Skill",cmd:"/n8n-engineer",status:"green",desc:"Build/audit/deploy/debug workflow n8n qua REST API."},
+  {id:"code-guardian",name:"Code Guardian",icon:"🛡️",color:"#0e7490",type:"Skill",cmd:"/code-guardian",status:"green",desc:"Review code TRONG node n8n theo 4 nguyên tắc Karpathy."},
+  {id:"browser-pilot",name:"Browser Pilot",icon:"🧭",color:"#0891b2",type:"Skill",cmd:"/browser-pilot",status:"amber",desc:"Agent điều khiển browser thật (browser-use+Playwright, LLM free) click/điền form/lấy data sau login. ⚠️ rủi ro ToS khi tự đăng/login — human-approve."}]},
+ {tag:"PIPELINE",color:"#16a34a",title:"4. Dây Chuyền n8n",agents:[
+  {id:"wf-l1",name:"L1 · Scripting v2",icon:"📝",color:"#16a34a",type:"Workflow n8n",wf:"Pf10H0OdV06119Qb",status:"green",desc:"Form→Gemini đẻ 5 concept×2 A/B hook + Claims Gate + UTM → Sheet Draft."},
+  {id:"wf-l2",name:"L2 · Render + QA",icon:"🖼️",color:"#d97706",type:"Workflow n8n",wf:"jqrSiUrzJWjrw7W1",status:"amber",desc:"Lọc Draft (≤5) → render → QA Gemini Vision → Materials Ready / Draft_Retry. ⚠️ Render cần billing."},
+  {id:"wf-l3",name:"L3 · Publish Queue",icon:"📤",color:"#15803d",type:"Workflow n8n",wf:"37EBViuOpIi5GUjE",status:"green",desc:"Watch Drive 'Video Ready' → caption → Sheet Publish Queue."},
+  {id:"wf-err",name:"Error Handler",icon:"🚨",color:"#b91c1c",type:"Workflow n8n",wf:"vQVc7Ub00YDnyMQg",status:"green",desc:"Bắt lỗi → Error Log + Telegram digest 15h."},
+  {id:"wf-pnl",name:"Daily P&L",icon:"💰",color:"#0d9488",type:"Workflow n8n",wf:"oliNlJ768x6dimDb",status:"green",desc:"Klaviyo → P&L → Dashboard."},
+  {id:"wf-crm",name:"CRM API (webhook)",icon:"👥",color:"#7c3aed",type:"Workflow n8n",wf:"o5tyRbqecUTNAhpD",status:"green",desc:"Webhook GET /webhook/ceenor-crm → Klaviyo profiles + predictive analytics (orders/CLV/churn) → JSON live."},
+  {id:"wf-task",name:"Phòng Giao Việc (AI)",icon:"🤖",color:"#7c3aed",type:"Workflow n8n",wf:"5tG0W4Z9QQCHPnQ5",status:"green",desc:"Webhook POST /webhook/ceenor-task → Groq llama-3.3-70b (free) tự làm việc được giao → trả báo cáo. Giao việc ở tab 'Giao việc'."}]},
+ {tag:"DATA",color:"#0d9488",title:"5. Data & Trí Nhớ",agents:[
+  {id:"finance-analyst",name:"Finance Analyst",icon:"💰",color:"#0d9488",type:"Skill",cmd:"/finance-analyst",status:"green",desc:"Phân tích CSV orders/P&L bằng pandas + PandasAI(Groq free) → margin/ROAS/dự báo + cảnh báo vượt ngưỡng. Engine số liệu cho phòng Finance. Đã smoke-test."},
+  {id:"brand-memory",name:"Brand Memory (RAG)",icon:"🧠",color:"#0f766e",type:"Skill",cmd:"/brand-memory",status:"green",desc:"Trí nhớ dài hạn: ChromaDB(free/local) lưu Brand DNA/chính sách + Mem0 lịch sử khách + GraphRAG. Mọi agent truy hồi context kèm nguồn. Đã smoke-test."}]},
+ {tag:"ORCH·REL",color:"#7c3aed",title:"6. Điều Phối & Hạ Tầng",agents:[
+  {id:"ceo-orchestrator",name:"CEO Orchestrator",icon:"👑",color:"#7c3aed",type:"Skill",cmd:"/ceo-orchestrator",status:"green",desc:"CEO ảo native Claude Code: phân rã việc → giao 6 subagent (data-scout/crawl-engine/finance-analyst/sourcing-scout/trend-hunter/brand-memory) chạy song song → tổng hợp A/B/C chờ Duyệt. CrewAI-style. Mức An toàn."},
+  {id:"llm-router",name:"LLM Router",icon:"🔀",color:"#7c3aed",type:"Skill",cmd:"/llm-router",status:"green",desc:"Chống sập: LiteLLM route Groq→Gemini fallback + proxy 1 endpoint chung cho n8n/PandasAI/mem0/crew. Đổi model 1 chỗ. Free-only."},
+  {id:"agent-crew",name:"Agent Crew",icon:"🎩",color:"#6d28d9",type:"Skill",cmd:"/agent-crew",status:"green",desc:"Điều phối đa-agent (CrewAI + AutoGen) chạy Groq free — nhóm agent tranh luận/dây chuyền. Bổ trợ CEO Agent. ⚠️ giữ crew nhỏ kẻo rate-limit."}]}
+];
+const GUARDIAN={id:"content-editor",name:"Content Editor",sub:"Quality Gate",icon:"✂️",color:"#7c3aed",type:"Skill",cmd:"/content-editor",status:"green",desc:"Cổng chất lượng BẮT BUỘC trước khi đăng. Chấm 5 chiều, revise nếu <35/50."};
+const LINKS=[{t:"📝 Form kịch bản",u:FORM_URL},{t:"👥 CRM webhook",u:CRM_WEBHOOK},
+ {t:"📄 Sheet Scripts",u:"https://docs.google.com/spreadsheets/d/1cT2dI8SXyy8E0FGpkL7U8Fkc0l2gQgq1IrVVcaspvFA"},
+ {t:"🚨 Error Log",u:"https://docs.google.com/spreadsheets/d/1WYtto1-CJN4-JEE3JNXMgMzNjTa484Bheu0KNzK2BIM"},
+ {t:"💰 Dashboard P&L",u:"https://docs.google.com/spreadsheets/d/1GJomORX8GdxZRtdQkMTQ4GfWVVlpXHsES6Rtnq4RvNM"},
+ {t:"🧩 n8n Workflows",u:N8N_BASE+"/home/workflows"}];
+
+const SUBAGENTS=new Set(['data-scout','web-crawler','finance-analyst','sourcing-scout','trend-hunter','brand-memory']);
+const idx={'orchestrator':AGENTS.orchestrator};
+const dEl=document.getElementById('depts');
+DEPTS.forEach(dep=>{const col=document.createElement('div');col.className='dept';
+ col.innerHTML=`<h3><span class="tag" style="background:${dep.color}">${dep.tag}</span> ${dep.title}</h3>`;
+ dep.agents.forEach(a=>{idx[a.id]=a;const c=document.createElement('div');c.className='card';c.onclick=()=>openAgent(a.id);
+  const bot=SUBAGENTS.has(a.id)?' <span title="Đã chuyên hoá thành subagent — chạy độc lập">🤖</span>':'';
+  c.innerHTML=`<div class="ci" style="background:${a.color}">${a.icon}</div><div><div class="nm">${a.name}${bot} <span class="dot ${a.status}"></span></div><div class="ds">${a.desc}</div></div>`;col.appendChild(c);});
+ dEl.appendChild(col);});
+idx[GUARDIAN.id]=GUARDIAN;
+const g=document.createElement('div');g.className='dept';g.innerHTML=`<h3><span class="tag" style="background:${GUARDIAN.color}">GUARDIAN</span> Quality Guardian</h3>`;
+const gc=document.createElement('div');gc.className='card guardian';gc.onclick=()=>openAgent(GUARDIAN.id);
+gc.innerHTML=`<div class="ci" style="background:${GUARDIAN.color}">${GUARDIAN.icon}</div><div><div class="nm">${GUARDIAN.name} <span class="dot ${GUARDIAN.status}"></span></div><div class="ds">${GUARDIAN.desc}</div></div>`;
+g.appendChild(gc);dEl.appendChild(g);
+document.getElementById('agentCount').textContent=Object.keys(idx).length;
+
+const lEl=document.getElementById('links');
+LINKS.forEach(l=>{const b=document.createElement('div');b.className='box';b.innerHTML=`<h4>${l.t}</h4><a class="link" href="${l.u}" target="_blank">${l.u.length>50?l.u.slice(0,50)+'…':l.u}</a>`;lEl.appendChild(b);});
+document.getElementById('baseTxt').textContent=N8N_BASE;
+document.getElementById('crmTxt').textContent=CRM_WEBHOOK;
+document.getElementById('formLink').href=FORM_URL;
+const segEl=document.getElementById('segs');SEGMENTS.forEach(s=>{const e=document.createElement('span');e.className='seg';e.textContent=s;segEl.appendChild(e);});
+
+// ---- Departments ----
+const cg=document.getElementById('companyGrid');
+DEPT_AGENTS.forEach(a=>{
+  const c=document.createElement('div');c.className='card';c.style.margin='0';c.onclick=()=>openDept(a.key);
+  c.innerHTML=`<div class="ci" style="background:${a.color}">${a.icon}</div><div><div class="nm">${a.name} <span class="dot green"></span></div><div class="ds">${a.desc}</div></div>`;
+  const wrap=document.createElement('div');wrap.className='dept';wrap.style.padding='0';wrap.style.border='0';wrap.style.background='transparent';
+  wrap.appendChild(c);cg.appendChild(wrap);
+});
+function openDept(key){
+  const a=DEPT_AGENTS.find(x=>x.key===key);if(!a)return;
+  document.getElementById('mIc').textContent=a.icon;document.getElementById('mIc').style.background=a.color;
+  document.getElementById('mNm').textContent=a.name;document.getElementById('mRl').textContent='Agent phòng ban · Groq llama-3.3 · báo cáo lên 👑 CEO';
+  let h=`<p>${a.desc}</p>`;
+  h+=`<div class="meta">`+(a.kpis||[]).map(k=>`<span class="chip">${k}</span>`).join('')+`</div>`;
+  h+=`<div class="lbl">Nguồn dữ liệu</div><div style="font-size:12.5px;color:#374151;line-height:1.7">`+(a.sources||[]).map(s=>'• '+s).join('<br>')+`</div>`;
+  h+=`<div class="lbl">Quy trình (SOP)</div><div style="font-size:12.5px;color:#374151;line-height:1.7">`+(a.sop||[]).map((s,i)=>(i+1)+'. '+s).join('<br>')+`</div>`;
+  if(key==='finance') h+=finBoard();
+  h+=`<div class="lbl">Việc nhanh</div><div style="display:flex;flex-wrap:wrap;gap:6px">`+(a.presets||[]).map(p=>`<button class="btn ghost" style="font-size:12px;padding:6px 10px" onclick="document.getElementById('deptTask').value='${p.replace(/'/g,"\\'")}';askDept('${key}')">${p}</button>`).join('')+`</div>`;
+  h+=`<div class="lbl">Giao việc tự do</div><textarea id="deptTask" placeholder="Mô tả việc cho phòng ${a.name}..."></textarea>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" onclick="askDept('${key}')">🚀 Giao việc</button><span id="deptStatus" style="font-size:12px;color:var(--muted)"></span></div>
+    <div id="deptReply" style="white-space:pre-wrap;font-size:13.5px;line-height:1.6;color:#374151;margin-top:12px"></div>`;
+  document.getElementById('mBody').innerHTML=h;document.getElementById('ov').classList.add('open');
+  if(key==='finance') loadFinLive();
+}
+async function askDept(key){
+  const t=(document.getElementById('deptTask').value||'').trim();
+  const st=document.getElementById('deptStatus'),rep=document.getElementById('deptReply');
+  st.textContent='⏳ Phòng đang xử lý...';
+  try{
+    const res=await fetch(DEPT_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'dept='+key+'&task='+encodeURIComponent(t)});
+    const d=await res.json();rep.textContent=d.reply||'(trống)';
+    st.textContent='✅ '+(d.deptName||'')+' · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi: '+e.message; }
+}
+
+// ---- Log / memory ----
+async function loadLog(){
+  const st=document.getElementById('logStatus'),list=document.getElementById('logList');
+  st.textContent='⏳ đang tải...';list.innerHTML='';
+  try{
+    const d=await (await fetch(LOG_WEBHOOK,{cache:'no-store'})).json();
+    st.textContent='🟢 '+(d.count||0)+' bản ghi · '+new Date(d.fetchedAt||Date.now()).toLocaleString('vi-VN');
+    (d.entries||[]).forEach((e,i)=>{
+      const div=document.createElement('div');div.className='box';div.style.marginBottom='10px';
+      div.innerHTML='<div style="font-size:12px;color:var(--muted)">'+new Date(e.at).toLocaleString('vi-VN')+' · '+e.type+'</div>'+
+        '<div style="white-space:pre-wrap;font-size:13px;line-height:1.6;margin-top:6px">'+(e.ceo||'').slice(0,500)+'</div>'+
+        '<a class="link" style="cursor:pointer;font-size:12px" onclick="var x=document.getElementById(\'logd'+i+'\');x.style.display=x.style.display==\'none\'?\'block\':\'none\'">⤢ Xem báo cáo phòng ban</a>'+
+        '<div id="logd'+i+'" style="display:none;white-space:pre-wrap;font-size:12px;color:#374151;margin-top:8px;border-top:1px solid var(--line);padding-top:8px">'+(e.departments||'').slice(0,3000)+'</div>';
+      list.appendChild(div);
+    });
+    if(!(d.entries||[]).length) list.innerHTML='<div class="box">Chưa có bản ghi. Bấm "▶️ Chạy cả công ty" ở tab CEO để tạo.</div>';
+  }catch(e){ st.textContent='🟡 Lỗi: '+e.message; }
+}
+
+// ---- CEO Agent ----
+async function genRun(){
+  const st=document.getElementById('ceoStatus'),box=document.getElementById('ceoResult'),rep=document.getElementById('ceoReport');
+  st.textContent='⏳ Đang chạy cả công ty (4 phòng → CEO), ~20-30s...';
+  try{
+    const res=await fetch(RUN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'trigger=dashboard'});
+    const d=await res.json();
+    rep.textContent=(d.ceo||'(trống)')+'\n\n──────────\n🏢 BÁO CÁO TỪNG PHÒNG\n\n'+(d.departments||'');
+    box.style.display='block';
+    st.textContent='✅ Chạy xong cả công ty · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi: '+e.message; }
+}
+async function genCEO(){
+  const v=(document.getElementById('ceoInput').value||'').trim();
+  const st=document.getElementById('ceoStatus'),box=document.getElementById('ceoResult'),rep=document.getElementById('ceoReport');
+  st.textContent='⏳ CEO đang quét dữ liệu & phân tích...';
+  try{
+    const res=await fetch(CEO_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'report='+encodeURIComponent(v||'Tổng hợp tình hình tổng thể.')});
+    const d=await res.json(); rep.textContent=d.report||'(trống)';box.style.display='block';
+    st.textContent='✅ '+(d.model||'')+' · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi gọi CEO webhook: '+e.message; }
+}
+
+// ---- Duyệt → giao phòng ban thực thi (chế độ An toàn: chỉ tạo nháp) ----
+const SAFE_PREFIX='✅ Founder ĐÃ DUYỆT đề xuất dưới đây. Nhiệm vụ của bạn: TẠO bản nháp/nội dung CỤ THỂ, sẵn sàng để Founder xem rồi tự bấm gửi. TUYỆT ĐỐI KHÔNG gửi email, KHÔNG đăng bài, KHÔNG tạo discount, KHÔNG đụng tiền — chỉ tạo nháp. Xuất ra nội dung dùng được ngay (caption/kịch bản/email draft/checklist...). Đề xuất đã duyệt:\n\n';
+function approveCEO(){
+  const rep=(document.getElementById('ceoReport').textContent||'').trim();
+  if(!rep){toast('Chưa có báo cáo CEO để duyệt');return;}
+  const grid=document.getElementById('dispatchDepts');
+  grid.innerHTML=DEPT_AGENTS.map(d=>`<button class="btn ghost" style="border-color:${d.color}" onclick="dispatchApproved('${d.key}')">${d.icon} ${d.name}</button>`).join('');
+  document.getElementById('dispatchBox').style.display='block';
+  document.getElementById('dispatchResult').style.display='none';
+  document.getElementById('dispatchStatus').textContent='';
+}
+async function dispatchApproved(key){
+  const dept=DEPT_AGENTS.find(d=>d.key===key);
+  const rep=(document.getElementById('ceoReport').textContent||'').trim();
+  const st=document.getElementById('dispatchStatus'),box=document.getElementById('dispatchResult');
+  st.textContent='⏳ '+dept.icon+' '+dept.name+' đang tạo bản nháp (chế độ An toàn)...';
+  const task=SAFE_PREFIX+rep;
+  try{
+    const res=await fetch(DEPT_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'dept='+key+'&task='+encodeURIComponent(task)});
+    const d=await res.json();
+    box.textContent=d.reply||d.report||'(không có nội dung)';box.style.display='block';
+    st.textContent='✅ '+dept.name+' đã trả bản nháp · '+(d.model||'groq')+' · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN')+' — xem & duyệt gửi thủ công.';
+  }catch(e){ st.textContent='🟡 Lỗi gọi phòng '+dept.name+': '+e.message; }
+}
+
+// ---- Task Room ----
+async function sendTask(){
+  const t=(document.getElementById('taskBox').value||'').trim();
+  if(!t){toast('Nhập việc đã nhé');return;}
+  const st=document.getElementById('taskStatus'),box=document.getElementById('taskResult'),rep=document.getElementById('taskReply');
+  st.textContent='⏳ AI đang làm việc...';
+  try{
+    const res=await fetch(TASK_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'task='+encodeURIComponent(t)});
+    const d=await res.json();
+    rep.textContent=d.reply||'(không có nội dung)';box.style.display='block';
+    st.textContent='✅ Xong · '+(d.model||'gemini')+' · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Không gọi được webhook: '+e.message; }
+}
+
+// ---- CRM ----
+let CRM=[];
+function classify(c){
+  if((c.clv||0)>=100) return 'VIP';
+  if((c.orders||0)>0) return 'Customer';
+  const t=c.lastEvent?Date.parse(c.lastEvent):0;
+  const days=t?(Date.now()-t)/86400000:9999;
+  if(days<=14) return 'Engaged';
+  return 'Lead';
+}
+async function loadCRM(force){
+  const st=document.getElementById('crmStatus');st.textContent='⏳ Đang gọi n8n webhook...';
+  try{
+    const res=await fetch(CRM_WEBHOOK,{cache:'no-store'});
+    const d=await res.json();
+    CRM=(d.customers||[]).map(c=>({...c}));
+    st.innerHTML=`🟢 Live từ Klaviyo · ${CRM.length} khách · cập nhật ${new Date(d.fetchedAt||Date.now()).toLocaleString('vi-VN')}`;
+    document.getElementById('crmBadge').textContent='live';
+  }catch(e){
+    CRM=SEED.slice();
+    st.innerHTML=`🟡 Không gọi được webhook (CORS/offline) — hiển thị snapshot. <small>${e.message}</small>`;
+    document.getElementById('crmBadge').textContent='snap';
+  }
+  renderCRM();
+}
+function renderCRM(){
+  const q=(document.getElementById('crmSearch').value||'').toLowerCase();
+  const rows=CRM.filter(c=>!q||[c.email,c.name,c.country].join(' ').toLowerCase().includes(q));
+  // kpis
+  const withOrders=rows.filter(c=>(c.orders||0)>0).length;
+  const spent=Math.round(rows.reduce((s,c)=>s+(c.clv||0),0));
+  const active=rows.filter(c=>c.lastEvent&&(Date.now()-Date.parse(c.lastEvent))/86400000<=14).length;
+  const k=document.getElementById('crmKpis');
+  k.innerHTML=card('Tổng khách',rows.length,'#7c3aed')+card('Đang tương tác',active,'#0ea5e9')+card('Đã mua',withOrders,'#16a34a')+card('Doanh thu','$'+spent,'#d97706');
+  // kanban
+  const stages=[['Lead','Lead / Subscriber'],['Engaged','Đang tương tác'],['Customer','Khách hàng'],['VIP','VIP']];
+  const kb=document.getElementById('kanban');kb.innerHTML='';
+  stages.forEach(([key,label])=>{
+    const list=rows.filter(c=>classify(c)===key);
+    const col=document.createElement('div');col.className='kcol';
+    col.innerHTML=`<h4>${label} <span class="cnt">${list.length}</span></h4>`;
+    list.forEach(c=>{
+      const srcs=`<span class="src kv">Klaviyo</span>`+((c.orders||0)>0?`<span class="src sh">Shopify</span>`:'');
+      const money=(c.clv||0)>0?'<span>💲 $'+c.clv+'</span>':'';
+      const el=document.createElement('div');el.className='lead';el.onclick=()=>openLead(c.email);
+      el.innerHTML=`<div class="le">${c.name||c.email.split('@')[0]}</div>
+        <div class="ls">${srcs}${c.country?'<span>🌏 '+c.country+'</span>':''}${money}${c.lastEvent?'<span>⏱ '+c.lastEvent.slice(0,10)+'</span>':''}</div>`;
+      col.appendChild(el);});
+    if(!list.length) col.innerHTML+=`<div style="font-size:12px;color:#9ca3af">—</div>`;
+    kb.appendChild(col);
+  });
+}
+function card(t,v,c){return `<div class="box"><div class="kpi" style="color:${c};font-size:26px">${v} <small>${t}</small></div></div>`}
+function openLead(email){
+  const c=CRM.find(x=>x.email===email);if(!c)return;
+  document.getElementById('mIc').textContent='👤';document.getElementById('mIc').style.background='#7c3aed';
+  document.getElementById('mNm').textContent=c.name||email.split('@')[0];
+  document.getElementById('mRl').textContent=email;
+  let h=`<div class="meta"><span class="chip">${classify(c)}</span>${c.country?'<span class="chip">🌏 '+c.country:''}${c.city?' · '+c.city:''}${c.country?'</span>':''}<span class="chip">src: ${c.source||'Klaviyo'}</span>${c.churn!=null?'<span class="chip">churn '+c.churn+'%</span>':''}</div>`;
+  h+=`<p><b>Email:</b> ${email}<br><b>Đơn hàng:</b> ${c.orders||0} · <b>CLV:</b> $${c.clv||0}${c.predictedClv?' · <b>Dự đoán CLV:</b> $'+c.predictedClv:''}<br>`;
+  h+=`<b>Hoạt động cuối:</b> ${c.lastEvent?new Date(c.lastEvent).toLocaleString('vi-VN'):'—'}<br>`;
+  h+=`<b>Tạo:</b> ${c.created?c.created.slice(0,10):'—'}</p>`;
+  h+=`<div class="lbl">Hành động gợi ý</div>`;
+  const stage=classify(c);
+  const sug=stage==='Lead'?'Gửi welcome / nurture email (Klaviyo flow).':stage==='Engaged'?'Đang tương tác → đẩy ưu đãi chuyển đổi.':stage==='Customer'?'Up-sell / xin review.':'VIP → chăm sóc riêng, early access.';
+  h+=`<p>${sug}</p>`;
+  h+=`<div style="display:flex;gap:8px;margin-top:6px"><a class="btn" style="text-decoration:none" href="mailto:${email}" >✉️ Email</a><button class="btn ghost" onclick="copyText('${email}')">Copy email</button></div>`;
+  document.getElementById('mBody').innerHTML=h;document.getElementById('ov').classList.add('open');
+}
+
+// ---- agent modal ----
+function openAgent(id){const a=idx[id];if(!a)return;
+  document.getElementById('mIc').textContent=a.icon||'🧠';document.getElementById('mIc').style.background=a.color||'#7c3aed';
+  document.getElementById('mNm').textContent=a.name;document.getElementById('mRl').textContent=(a.type||'')+(a.role?' · '+a.role:'');
+  let h=`<div class="meta"><span class="chip">${a.type}</span><span class="chip">${a.status==='green'?'🟢 Sẵn sàng':a.status==='amber'?'🟡 Cần xử lý':'🔴 Blocker'}</span>${a.cmd?'<span class="chip">'+a.cmd+'</span>':''}</div><p>${a.desc}</p>`;
+  if(a.cmd){h+=`<div class="lbl">Lệnh gọi</div><div class="cmd"><input id="cmdIn" readonly value="${a.cmd}"><button class="btn" onclick="copyVal('cmdIn')">Copy</button></div>
+    <div class="lbl">Giao việc</div><textarea id="taskIn" placeholder="Mô tả việc cho ${a.name}..."></textarea>
+    <div style="margin-top:8px"><button class="btn" onclick="copyTask('${a.cmd}')">Copy lệnh + việc</button></div>`;}
+  if(a.wf){const url=N8N_BASE+"/workflow/"+a.wf;h+=`<div class="lbl">Workflow n8n</div><p>ID: <code>${a.wf}</code></p>
+    <div style="display:flex;gap:8px;margin-top:6px"><a class="btn" style="text-decoration:none" href="${url}" target="_blank">Mở trong n8n →</a><button class="btn ghost" onclick="copyText('${url}')">Copy link</button></div>`;}
+  document.getElementById('mBody').innerHTML=h;document.getElementById('ov').classList.add('open');
+}
+function closeM(){document.getElementById('ov').classList.remove('open')}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+function copyText(v){navigator.clipboard.writeText(v).then(()=>toast('Đã copy ✓'))}
+function copyVal(id){copyText(document.getElementById(id).value)}
+function copyTask(cmd){const t=document.getElementById('taskIn').value.trim();copyText(t?cmd+' '+t:cmd)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM()});
+
+// nav
+document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>{
+ document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));
+ document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+ n.classList.add('active');document.getElementById(n.dataset.view).classList.add('active');
+ if(n.dataset.view==='crm'&&!CRM.length) loadCRM();
+ if(n.dataset.view==='log') loadLog();
+});
+// preload CRM for overview count
+loadCRM().then(()=>{document.getElementById('ovCust').firstChild.textContent=CRM.length+' ';});
+</script>
+</body>
+</html>
