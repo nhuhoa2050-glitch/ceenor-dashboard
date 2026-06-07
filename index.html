@@ -269,8 +269,8 @@
 
     <!-- TẠO ẢNH -->
     <section class="view" id="image">
-      <h1>Tạo ảnh 🖼️ <span style="font-size:12px;color:var(--muted)">Free · Pollinations/FLUX</span></h1>
-      <div class="sub">Nhập mô tả → tạo ảnh sản phẩm/marketing miễn phí (vá nút thắt L2, không cần billing). Ảnh render trên trình duyệt bạn.</div>
+      <h1>Tạo ảnh 🖼️ <span style="font-size:12px;color:var(--muted)">Prompt → Higgsfield</span></h1>
+      <div class="sub">Nhập ý tưởng → ra prompt ảnh tối ưu → mở Higgsfield tạo ảnh (bạn có credit) → tải về upload Shopify (tự thành WebP). Pipeline không chờ ảnh nên không bao giờ lỗi; hết credit thì cứ bỏ qua, làm sau.</div>
       <div class="box" style="max-width:680px">
         <textarea id="imgPrompt" placeholder="VD: Ceenor Tide mini washer on a dorm desk, soft morning light, cozy minimalist aesthetic, product photo" style="min-height:72px"></textarea>
         <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -376,6 +376,7 @@ const EMAIL_WEBHOOK=N8N_BASE+"/webhook/ceenor-email";
 const CAMPAIGN_WEBHOOK=N8N_BASE+"/webhook/ceenor-campaign";
 const SECRETARY_WEBHOOK=N8N_BASE+"/webhook/ceenor-secretary";
 const IMAGE_WEBHOOK=N8N_BASE+"/webhook/ceenor-image";
+const PUBLISH_WEBHOOK=N8N_BASE+"/webhook/ceenor-blog-publish";
 const FIN={
  url:'https://docs.google.com/spreadsheets/d/1cZpUUJBkjvLQqjjrsP-jTEW4aOi4x0tqcEJCUVGEP74/edit',
  head:[['Mục tiêu DT','264.000.000 ₫/th'],['DT/ngày','8.800.000 ₫'],['AOV','700.000 ₫'],['Đơn cần/ngày','~13'],['CM','25% (min 23%)'],['Net target','15% · Thuế 20%'],['BEP','264tr ₫'],['ROAS min','6.67x'],['Định phí','66tr (25% DT)'],['Nhân sự','46tr · 7 người'],['Vốn/Hồi vốn','200tr · 6 th']],
@@ -621,15 +622,20 @@ async function sendTask(){
 async function genImage(){
   const prompt=(document.getElementById('imgPrompt').value||'').trim();
   if(!prompt){toast('Nhập mô tả ảnh đã nhé');return;}
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const st=document.getElementById('imgStatus'),box=document.getElementById('imgResult');
-  st.textContent='⏳ Đang xin URL ảnh...';
+  st.textContent='⏳ ...';
   try{
     const res=await fetch(IMAGE_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})});
     const d=await res.json();
     if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); return; }
-    box.innerHTML='<img src="'+d.image_url+'" alt="ảnh Ceenor" style="max-width:100%;border-radius:12px;display:block" onload="document.getElementById(\'imgStatus\').textContent=\'✅ Xong\'" onerror="document.getElementById(\'imgStatus\').textContent=\'🟡 Render lỗi/đông, bấm tạo lại\'"><div style="margin-top:8px"><a class="link" href="'+d.image_url+'" target="_blank">↗ Mở/Tải ảnh full</a></div>';
-    box.style.display='block';
-    st.textContent='⏳ Đang render (~10-20s)...';
+    window._imgPrompt=d.prompt||prompt;
+    let h='<div style="font-size:13px;color:#374151"><b>🖼️ Prompt ảnh (đem qua Higgsfield tạo):</b></div>';
+    h+='<textarea readonly onclick="this.select()" style="width:100%;min-height:70px;margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:9px;font-size:12px;background:#faf8fe;color:#374151">'+esc(d.prompt||prompt)+'</textarea>';
+    h+='<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="copyText(window._imgPrompt)">⧉ Copy prompt</button><a class="btn" href="https://higgsfield.ai/" target="_blank" style="text-decoration:none;color:#fff">🎨 Mở Higgsfield</a></div>';
+    h+='<div style="margin-top:8px;font-size:12px;color:var(--muted)">'+esc(d.note||'')+'</div>';
+    box.innerHTML=h; box.style.display='block';
+    st.textContent='✅ Sẵn sàng';
   }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
 }
 
@@ -703,9 +709,18 @@ async function genEmail(){
 }
 
 // ---- Blog SEO writer ----
+let _blogTopic='',_blogKw='';
 async function genBlog(){
-  const topic=(document.getElementById('blogTopic').value||'').trim();
-  const kw=(document.getElementById('blogKw').value||'').trim();
+  _blogTopic=(document.getElementById('blogTopic').value||'').trim();
+  _blogKw=(document.getElementById('blogKw').value||'').trim();
+  await doBlog(_blogTopic,_blogKw);
+}
+async function reviseBlog(){
+  const fb=(document.getElementById('blogFb').value||'').trim();
+  if(!fb){toast('Nhập góp ý sửa đã nhé');return;}
+  await doBlog((_blogTopic||'')+'\n[GÓP Ý SỬA — áp dụng nghiêm]: '+fb,_blogKw);
+}
+async function doBlog(topic,kw){
   const st=document.getElementById('blogStatus'),box=document.getElementById('blogResult'),body=document.getElementById('blogBody');
   st.textContent='⏳ Đang viết bài SEO (~15-25s)...';
   try{
@@ -714,24 +729,33 @@ async function genBlog(){
     if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); box.style.display='none'; return; }
     window._blog=d;
     const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    const row=(label,val,key)=>'<div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><div style="min-width:96px;color:#6b7280;font-size:12px;padding-top:2px">'+label+'</div><div style="flex:1;font-size:13px">'+esc(val||'—')+'</div><button class="btn ghost" style="padding:3px 9px;font-size:12px" onclick="copyText(window._blog.'+key+'||\'\')">Copy</button></div>';
     let h='';
-    if(d.published){ h+='<div style="color:#16a34a;font-weight:700">✅ Đã đăng lên Shopify</div><a class="link" href="'+d.url+'" target="_blank">↗ '+d.url+'</a>'; }
-    else { h+='<div style="color:#d97706;font-weight:700">📝 Bài đã sẵn sàng — copy & đăng tay</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Vào Shopify admin → Blog posts → Add → dán từng phần dưới (phần Nội dung dán ở chế độ <code>&lt;/&gt;</code> Show HTML).</div>'; }
-    h+=row('Title',d.title,'title');
-    h+=row('Slug',d.slug,'slug');
-    h+=row('Meta desc',d.meta,'meta');
-    h+=row('Keyphrase',d.focus_keyphrase,'focus_keyphrase');
-    h+=row('Tags',d.tags,'tags');
-    if(d.image_prompt) h+=row('Ảnh bìa',d.image_prompt,'image_prompt');
-    if(d.body_html){
-      h+='<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Nội dung (HTML thô — dán vào Shopify)</b><button class="btn" style="padding:5px 12px;font-size:12px" onclick="copyText(window._blog.body_html)">⧉ Copy HTML</button></div>';
-      h+='<textarea readonly onclick="this.select()" style="width:100%;min-height:150px;margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:9px;font-size:11.5px;font-family:monospace;background:#faf8fe;color:#374151">'+esc(d.body_html)+'</textarea>';
-      h+='<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px">👁 Xem bản render</summary><div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px;font-size:13.5px;line-height:1.7;color:#2d3436">'+d.body_html+'</div></details>';
-    }
+    if(d.published){ h+='<div style="color:#16a34a;font-weight:700">✅ Đã đăng:</div><a class="link" href="'+d.url+'" target="_blank">↗ '+d.url+'</a>'; }
+    else { h+='<div style="color:#d97706;font-weight:700">📝 Bản nháp — xem, sửa nếu cần, rồi bấm Push</div>'; }
+    h+='<div class="lbl" style="margin-top:10px">Title</div><input id="bTitle" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px" value="'+esc(d.title)+'">';
+    h+='<div class="lbl" style="margin-top:8px">Meta description</div><input id="bMeta" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px" value="'+esc(d.meta)+'">';
+    h+='<div style="font-size:12px;color:var(--muted);margin-top:6px">Keyphrase: '+esc(d.focus_keyphrase||'—')+' · Tags: '+esc(d.tags||'—')+' · Slug: '+esc(d.slug||'')+'</div>';
+    if(d.image_prompt) h+='<div style="font-size:12px;color:var(--muted);margin-top:4px">🖼️ Ảnh bìa gợi ý: '+esc(d.image_prompt)+'</div>';
+    h+='<div class="lbl" style="margin-top:8px">Nội dung (HTML — sửa trực tiếp được)</div><textarea id="bBody" style="width:100%;min-height:170px;border:1px solid var(--line);border-radius:8px;padding:9px;font-size:11.5px;font-family:monospace;background:#faf8fe;color:#374151">'+esc(d.body_html||'')+'</textarea>';
+    h+='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px">👁 Xem bản render</summary><div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px;font-size:13.5px;line-height:1.7;color:#2d3436">'+(d.body_html||'')+'</div></details>';
+    h+='<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px"><div class="lbl">Chưa ưng? Góp ý để AI tạo lại:</div><div style="display:flex;gap:8px;margin-top:6px"><input id="blogFb" placeholder="VD: ngắn hơn, thêm phần so sánh, giọng trẻ hơn, nhấn USP 13 phút..." style="flex:1;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px"><button class="btn ghost" onclick="reviseBlog()">🔄 Tạo lại</button></div></div>';
+    h+='<div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" style="background:#16a34a" onclick="pushBlog()">🚀 Push lên Shopify</button><button class="btn ghost" onclick="copyText(document.getElementById(\'bBody\').value)">⧉ Copy HTML</button><span id="pushStatus" style="font-size:12px;color:var(--muted)"></span></div>';
     body.innerHTML=h; box.style.display='block';
     st.textContent='✅ Xong · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
   }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
+}
+async function pushBlog(){
+  const ps=document.getElementById('pushStatus'); const b=window._blog||{};
+  const payload={ title:(document.getElementById('bTitle')||{}).value||b.title, meta:(document.getElementById('bMeta')||{}).value||b.meta, body_html:(document.getElementById('bBody')||{}).value||b.body_html, slug:b.slug, tags:b.tags };
+  if(!payload.title||!payload.body_html){ ps.textContent='🟡 Thiếu tiêu đề/nội dung'; return; }
+  if(!confirm('Đăng bài này lên Shopify (public)?')) return;
+  ps.textContent='⏳ Đang đăng lên Shopify...';
+  try{
+    const res=await fetch(PUBLISH_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await res.json();
+    if(d.ok&&d.published){ ps.innerHTML='✅ Đã đăng! <a class="link" href="'+d.url+'" target="_blank">↗ Mở bài</a>'; }
+    else { ps.textContent='🟡 '+(d.error||'Chưa đăng được — kiểm tra token Shopify'); }
+  }catch(e){ ps.textContent='🟡 Lỗi: '+e.message; }
 }
 
 // ---- CRM ----
