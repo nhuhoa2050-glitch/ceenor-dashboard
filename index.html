@@ -101,6 +101,7 @@
     <div class="nav" data-view="secretary"><span class="ic">🗒️</span> Thư ký AI <span class="badge live">AI</span></div>
     <div class="nav" data-view="image"><span class="ic">🖼️</span> Tạo ảnh <span class="badge live">free</span></div>
     <div class="nav" data-view="ceo"><span class="ic">👑</span> CEO Agent <span class="badge live">AI</span></div>
+    <div class="nav" data-view="do"><span class="ic">⚡</span> Ra lệnh tổng <span class="badge live">AI</span></div>
     <div class="nav" data-view="company"><span class="ic">🏢</span> Phòng Ban <span class="badge live" id="deptBadge">6</span></div>
     <div class="nav" data-view="log"><span class="ic">📓</span> Nhật ký <span class="badge live">mem</span></div>
     <div class="nav" data-view="overview"><span class="ic">📊</span> Overview</div>
@@ -297,6 +298,21 @@
       <div class="box" style="margin-top:14px"><h4>ℹ️ Sắp bật</h4><p style="font-size:12.5px;color:var(--muted)">Nhắc tự động qua Telegram (việc đến hạn + nhắc phòng ban nộp báo cáo checklist mỗi ngày) — cần Telegram chat ID của bạn để kích hoạt.</p></div>
     </section>
 
+    <!-- RA LỆNH TỔNG -->
+    <section class="view" id="do">
+      <h1>Ra lệnh tổng ⚡ <span style="font-size:12px;color:var(--muted)">1 lệnh → phòng ban tự phối hợp</span></h1>
+      <div class="sub">Gõ 1 lệnh tự nhiên → CEO tự hiểu, lập kế hoạch, tự gọi đúng các phòng/công cụ liên quan và trả về <b>kết quả CUỐI dùng được ngay</b>. Không cần bấm từng AI lẻ.</div>
+      <div class="box" style="max-width:720px">
+        <textarea id="doCmd" placeholder="VD: Ra mắt sản phẩm Ceenor Tide cho mùa tựu trường / Phân tích tài chính tháng và đề xuất cắt chi / Lên chiến dịch winback khách cũ" style="min-height:84px"></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="genDo()">⚡ Thực thi lệnh</button>
+          <span id="doStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="doResult" style="margin-top:14px;display:none"><div id="doBody"></div></div>
+      <div class="box" style="margin-top:14px"><h4>💡 Cách hoạt động</h4><p style="font-size:12.5px;color:var(--muted)">CEO (brain) đọc lệnh → chọn việc cần: blog SEO, email flow, hook/ad, phân tích phòng ban… → chạy đồng bộ qua gateway → gộp thành 1 gói. Việc nhiều thì ~30–90s. An toàn: chỉ tạo nháp/nội dung, không tự đăng/chi tiền.</p></div>
+    </section>
+
     <!-- CAMPAIGN IN A BOX -->
     <section class="view" id="campaign">
       <h1>Campaign-in-a-Box 🚀 <span style="font-size:12px;color:var(--muted)">1 lệnh → cả gói</span></h1>
@@ -374,6 +390,7 @@ const LOG_WEBHOOK=N8N_BASE+"/webhook/ceenor-log";
 const BLOG_WEBHOOK=N8N_BASE+"/webhook/ceenor-blog";
 const EMAIL_WEBHOOK=N8N_BASE+"/webhook/ceenor-email";
 const CAMPAIGN_WEBHOOK=N8N_BASE+"/webhook/ceenor-campaign";
+const DO_WEBHOOK=N8N_BASE+"/webhook/ceenor-do";
 const SECRETARY_WEBHOOK=N8N_BASE+"/webhook/ceenor-secretary";
 const IMAGE_WEBHOOK=N8N_BASE+"/webhook/ceenor-image";
 const PUBLISH_WEBHOOK=N8N_BASE+"/webhook/ceenor-blog-publish";
@@ -660,6 +677,33 @@ async function genNote(){
     body.innerHTML=h; box.style.display='block';
     document.getElementById('secNote').value='';
     st.textContent='✅ '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
+}
+
+// ---- Ra lệnh tổng (orchestrator) ----
+async function genDo(){
+  const cmd=(document.getElementById('doCmd').value||'').trim();
+  if(!cmd){toast('Nhập lệnh đã nhé');return;}
+  const st=document.getElementById('doStatus'),box=document.getElementById('doResult'),body=document.getElementById('doBody');
+  st.textContent='⏳ CEO đang lập kế hoạch & điều phối các phòng (~30-90s)...';
+  try{
+    const res=await fetch(DO_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({command:cmd})});
+    const d=await res.json();
+    if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); return; }
+    window._do=d;
+    const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let h='<div style="font-size:13px;color:var(--muted)">🎯 '+esc(d.intent||'')+' · '+(d.count||0)+' việc</div>';
+    (d.results||[]).forEach((r,i)=>{
+      h+='<div class="box" style="margin-top:10px">';
+      if(r.error){ h+='<div style="color:#b91c1c;font-size:13px">⚠️ '+esc(r.type)+': '+esc(r.error)+'</div>'; }
+      else if(r.type==='dept'){ h+='<div style="font-weight:700">🏢 '+esc(r.dept||'Phòng ban')+'</div><div style="white-space:pre-wrap;font-size:13px;margin-top:6px">'+mdLite(r.reply||'')+'</div>'; }
+      else if(r.type==='content'){ h+='<div style="font-weight:700">✍️ '+esc(r.label||'Nội dung')+' <button class="btn ghost" style="padding:1px 7px;font-size:11px" onclick="copyText(window._do.results['+i+'].text)">copy</button></div><div style="white-space:pre-wrap;font-size:13px;margin-top:6px">'+mdLite(r.text||'')+'</div>'; }
+      else if(r.type==='blog'){ h+='<div style="font-weight:700">📝 Blog: '+esc(r.title||'')+'</div><div style="font-size:12px;color:var(--muted)">'+esc(r.meta||'')+'</div><details style="margin-top:6px"><summary style="cursor:pointer;font-size:12px">⤢ HTML</summary><textarea readonly onclick="this.select()" style="width:100%;min-height:110px;font-size:11px;font-family:monospace;background:#faf8fe;border:1px solid var(--line);border-radius:8px;padding:7px;margin-top:6px">'+esc(r.body_html||'')+'</textarea></details>'+(r.image_prompt?('<div style="font-size:12px;color:var(--muted);margin-top:4px">🖼️ '+esc(r.image_prompt)+'</div>'):''); }
+      else if(r.type==='email'){ h+='<div style="font-weight:700">✉️ Email ('+esc(r.flow||'')+')</div>'+(r.emails||[]).map((e,j)=>'<div style="font-size:13px;margin-top:4px">'+(j+1)+'. '+esc(e.subject||'')+' <button class="btn ghost" style="padding:1px 7px;font-size:11px" onclick="copyText(window._do.results['+i+'].emails['+j+'].body_html)">copy HTML</button></div>').join(''); }
+      h+='</div>';
+    });
+    body.innerHTML=h; box.style.display='block';
+    st.textContent='✅ Xong cả gói · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
   }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
 }
 
