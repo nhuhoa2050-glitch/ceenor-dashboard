@@ -138,7 +138,8 @@
       </div>
       <div class="statusline" id="crmStatus">Đang tải...</div>
       <div class="kpis" id="crmKpis"></div>
-      <div class="kanban" id="kanban"></div>
+      <div class="box" style="margin-top:14px;overflow:auto"><h4 style="margin:0 0 8px">📋 Danh sách khách <span style="font-weight:400;font-size:12px;color:var(--muted)">— bấm tiêu đề cột để sắp xếp · click dòng xem chi tiết</span></h4><div id="crmTableBox"></div></div>
+      <div class="box" style="margin-top:14px"><h4 style="margin:0 0 8px">🗂️ Pipeline</h4><div class="kanban" id="kanban"></div></div>
       <div class="box" style="margin-top:18px"><h4>🏷️ Klaviyo Segments (9)</h4><div class="segwrap" id="segs"></div></div>
     </section>
 
@@ -835,15 +836,46 @@ async function loadCRM(force){
   }
   renderCRM();
 }
+let crmSort={key:'clv',dir:-1};
+function crmSortBy(k){ if(crmSort.key===k) crmSort.dir*=-1; else { crmSort.key=k; crmSort.dir=-1; } renderCRM(); }
+function churnColor(v){ if(v==null) return '#9ca3af'; if(v>=50) return '#dc2626'; if(v>=25) return '#d97706'; return '#16a34a'; }
+function stageBadge(s){ const m={VIP:['#7c3aed','VIP'],Customer:['#16a34a','Khách'],Engaged:['#0ea5e9','Tương tác'],Lead:['#6b7280','Lead']}; const x=m[s]||m.Lead; return '<span style="background:'+x[0]+'22;color:'+x[0]+';font-weight:700;font-size:11px;padding:2px 9px;border-radius:20px">'+x[1]+'</span>'; }
 function renderCRM(){
   const q=(document.getElementById('crmSearch').value||'').toLowerCase();
-  const rows=CRM.filter(c=>!q||[c.email,c.name,c.country].join(' ').toLowerCase().includes(q));
-  // kpis
+  let rows=CRM.filter(c=>!q||[c.email,c.name,c.country].join(' ').toLowerCase().includes(q));
+  const sk=crmSort.key,sd=crmSort.dir;
+  rows=rows.slice().sort((a,b)=>{let av,bv;if(sk==='last'){av=a.lastEvent?Date.parse(a.lastEvent):0;bv=b.lastEvent?Date.parse(b.lastEvent):0;}else{av=Number(a[sk]||0);bv=Number(b[sk]||0);}return (av-bv)*sd;});
+  // KPIs mở rộng
+  const total=rows.length;
   const withOrders=rows.filter(c=>(c.orders||0)>0).length;
   const spent=Math.round(rows.reduce((s,c)=>s+(c.clv||0),0));
-  const active=rows.filter(c=>c.lastEvent&&(Date.now()-Date.parse(c.lastEvent))/86400000<=14).length;
+  const orders=rows.reduce((s,c)=>s+(c.orders||0),0);
+  const aov=orders?Math.round(spent/orders):0;
+  const avgClv=total?Math.round(spent/total):0;
+  const conv=total?Math.round(withOrders/total*100):0;
+  const churnRisk=rows.filter(c=>(c.churn||0)>=50).length;
   const k=document.getElementById('crmKpis');
-  k.innerHTML=card('Tổng khách',rows.length,'#7c3aed')+card('Đang tương tác',active,'#0ea5e9')+card('Đã mua',withOrders,'#16a34a')+card('Doanh thu','$'+spent,'#d97706');
+  k.innerHTML=card('Tổng khách',total,'#7c3aed')+card('Đã mua · '+conv+'%',withOrders,'#16a34a')+card('Doanh thu','$'+spent,'#d97706')+card('AOV','$'+aov,'#0891b2')+card('CLV TB','$'+avgClv,'#9333ea')+card('⚠️ Churn-risk',churnRisk,'#dc2626');
+  // BẢNG dữ liệu
+  const th=(label,key)=>'<th onclick="crmSortBy(\''+key+'\')" style="cursor:pointer;text-align:left;padding:8px;font-size:12px;color:#6b7280;border-bottom:1px solid var(--line);white-space:nowrap">'+label+(crmSort.key===key?(crmSort.dir<0?' ▼':' ▲'):'')+'</th>';
+  let t='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
+    '<th style="text-align:left;padding:8px;font-size:12px;color:#6b7280;border-bottom:1px solid var(--line)">Khách</th>'+
+    '<th style="text-align:left;padding:8px;font-size:12px;color:#6b7280;border-bottom:1px solid var(--line)">Quốc gia</th>'+
+    '<th style="text-align:left;padding:8px;font-size:12px;color:#6b7280;border-bottom:1px solid var(--line)">Giai đoạn</th>'+
+    th('Đơn','orders')+th('CLV','clv')+th('CLV dự đoán','predictedClv')+th('Churn','churn')+th('Lần cuối','last')+'</tr></thead><tbody>';
+  rows.forEach(c=>{const nm=(c.name||c.email.split('@')[0]);
+    t+='<tr onclick="openLead(\''+c.email+'\')" style="cursor:pointer;border-bottom:1px solid #f0edf7">'+
+      '<td style="padding:8px"><b>'+nm+'</b><div style="font-size:11px;color:#9ca3af">'+c.email+'</div></td>'+
+      '<td style="padding:8px">'+(c.country?('🌏 '+c.country):'—')+'</td>'+
+      '<td style="padding:8px">'+stageBadge(classify(c))+'</td>'+
+      '<td style="padding:8px">'+(c.orders||0)+'</td>'+
+      '<td style="padding:8px;font-weight:700">$'+(c.clv||0)+'</td>'+
+      '<td style="padding:8px;color:#6b7280">'+(c.predictedClv?'$'+c.predictedClv:'—')+'</td>'+
+      '<td style="padding:8px;color:'+churnColor(c.churn)+';font-weight:700">'+(c.churn!=null?c.churn+'%':'—')+'</td>'+
+      '<td style="padding:8px;color:#6b7280;white-space:nowrap">'+(c.lastEvent?c.lastEvent.slice(0,10):'—')+'</td></tr>';});
+  if(!rows.length) t+='<tr><td colspan="8" style="padding:12px;color:#9ca3af">Không có khách phù hợp.</td></tr>';
+  t+='</tbody></table>';
+  document.getElementById('crmTableBox').innerHTML=t;
   // kanban
   const stages=[['Lead','Lead / Subscriber'],['Engaged','Đang tương tác'],['Customer','Khách hàng'],['VIP','VIP']];
   const kb=document.getElementById('kanban');kb.innerHTML='';
