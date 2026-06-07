@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<script src="gate.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ceenor AIOS — Bảng Điều Khiển Multi-Agent + CRM</title>
@@ -77,6 +78,14 @@
   .mx{position:absolute;top:14px;right:16px;cursor:pointer;color:#fff;font-size:22px;opacity:.85}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1530;color:#fff;padding:10px 18px;border-radius:30px;font-size:13px;opacity:0;transition:opacity .25s;z-index:99}.toast.show{opacity:1}
   @media(max-width:760px){.side{display:none}}
+  .dxverdict{margin-top:14px;border-radius:12px;padding:14px;border:1px solid var(--line);background:#faf8fe;display:none}
+  .dxverdict.show{display:block}
+  .dxrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+  .dxrow label{font-size:11px;font-weight:700;color:#4b3b72;display:block;margin-bottom:3px}
+  .dxrow input,#dxStage{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px 10px;font-size:13px;background:#faf8fe;font-family:inherit}
+  .dxbar{height:8px;border-radius:6px;background:#eee;overflow:hidden;margin-top:4px}.dxbar i{display:block;height:100%}
+  .dxchk{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12.5px;color:#374151}.dxchk input{width:auto}
+  .dxpre{white-space:pre-wrap;font-size:12.5px;line-height:1.6;color:#2d3436;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;max-height:320px;overflow:auto}
 </style>
 </head>
 <body>
@@ -86,10 +95,17 @@
     <div class="nav active" data-view="org"><span class="ic">🏢</span> Phòng ban <span class="badge" id="agentCount">13</span></div>
     <div class="nav" data-view="crm"><span class="ic">👥</span> CRM <span class="badge live" id="crmBadge">live</span></div>
     <div class="nav" data-view="task"><span class="ic">🤖</span> Giao việc <span class="badge live">AI</span></div>
+    <div class="nav" data-view="blog"><span class="ic">✍️</span> Viết bài SEO <span class="badge live">AI</span></div>
+    <div class="nav" data-view="email"><span class="ic">✉️</span> Email Studio <span class="badge live">AI</span></div>
+    <div class="nav" data-view="campaign"><span class="ic">🚀</span> Campaign-in-a-Box <span class="badge live">AI</span></div>
+    <div class="nav" data-view="secretary"><span class="ic">🗒️</span> Thư ký AI <span class="badge live">AI</span></div>
+    <div class="nav" data-view="image"><span class="ic">🖼️</span> Tạo ảnh <span class="badge live">free</span></div>
     <div class="nav" data-view="ceo"><span class="ic">👑</span> CEO Agent <span class="badge live">AI</span></div>
     <div class="nav" data-view="company"><span class="ic">🏢</span> Phòng Ban <span class="badge live" id="deptBadge">6</span></div>
     <div class="nav" data-view="log"><span class="ic">📓</span> Nhật ký <span class="badge live">mem</span></div>
     <div class="nav" data-view="overview"><span class="ic">📊</span> Overview</div>
+    <div class="nav" data-view="diagnose"><span class="ic">🩺</span> Chẩn đoán <span class="badge live">GIGO</span></div>
+    <div class="nav" data-view="autoloop"><span class="ic">♻️</span> Auto Loop <span class="badge live">safe</span></div>
     <div class="nav" data-view="mission"><span class="ic">🎯</span> Mission Control</div>
     <div class="nav" data-view="war"><span class="ic">🔗</span> War Room</div>
     <div class="scat">Hệ thống</div>
@@ -221,6 +237,124 @@
       <div class="box" style="margin-top:14px"><h4>🔐 Bảo mật</h4><p>API key n8n là JWT full-quyền — nên revoke sau mỗi phiên dùng chung. CRM webhook không lộ key (chỉ trả dữ liệu đã lọc).</p></div>
       <div class="box" style="margin-top:14px"><h4>Phase 2 (chưa làm)</h4><p>Sync Shopify orders + Meta lead-ads vào CRM (cần Shopify credential trong n8n). Hiện Shopify hiển thị từ snapshot.</p></div>
     </section>
+    <!-- DIAGNOSE -->
+    <section class="view" id="diagnose">
+      <h1>Chẩn đoán 🩺 <span style="font-size:12px;color:var(--muted)">GIGO Decision Tree</span></h1>
+      <div class="sub">Nhập micro-metrics → engine tìm "khối u" trước khi kê đơn (qua 2 cổng: integrity + significance). Bỏ trống trường không có.</div>
+      <div class="box" style="max-width:560px">
+        <div class="lbl">Khâu</div>
+        <select id="dxStage" onchange="dxRender()">
+          <option value="conversion">Chuyển đổi (Web/Store)</option>
+          <option value="creative">Nội dung (Creative)</option>
+          <option value="traffic">Phân phối (PPC)</option>
+          <option value="product">Sản phẩm (Sourcing)</option>
+        </select>
+        <div id="dxFields"></div>
+        <button class="btn" onclick="dxRun()" style="margin-top:12px">🔎 Chẩn đoán</button>
+        <span id="dxStatus" style="font-size:12px;color:var(--muted);margin-left:8px"></span>
+        <div id="dxVerdict" class="dxverdict"></div>
+      </div>
+    </section>
+
+    <!-- AUTO LOOP -->
+    <section class="view" id="autoloop">
+      <h1>Auto Loop ♻️ <span style="font-size:12px;color:var(--muted)">Retention · Safe Mode</span></h1>
+      <div class="sub">Quét CRM live → tìm khách churn/win-back → soạn nháp email (giữ biên ≥23%). Realtime: trỏ webhook Klaviyo "cart abandoned" tới /webhook/ceenor-orchestrate.</div>
+      <div class="box" style="max-width:640px">
+        <button class="btn" onclick="dxOrch()">▶️ Quét & soạn nháp (event giả lập)</button>
+        <span id="orStatus" style="font-size:12px;color:var(--muted);margin-left:8px"></span>
+        <div id="orVerdict" class="dxverdict"></div>
+      </div>
+    </section>
+
+    <!-- TẠO ẢNH -->
+    <section class="view" id="image">
+      <h1>Tạo ảnh 🖼️ <span style="font-size:12px;color:var(--muted)">Free · Pollinations/FLUX</span></h1>
+      <div class="sub">Nhập mô tả → tạo ảnh sản phẩm/marketing miễn phí (vá nút thắt L2, không cần billing). Ảnh render trên trình duyệt bạn.</div>
+      <div class="box" style="max-width:680px">
+        <textarea id="imgPrompt" placeholder="VD: Ceenor Tide mini washer on a dorm desk, soft morning light, cozy minimalist aesthetic, product photo" style="min-height:72px"></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="genImage()">🖼️ Tạo ảnh</button>
+          <span id="imgStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="imgResult" style="margin-top:14px;display:none"></div>
+    </section>
+
+    <!-- THƯ KÝ AI -->
+    <section class="view" id="secretary">
+      <h1>Thư ký AI 🗒️ <span style="font-size:12px;color:var(--muted)">Chief of Staff</span></h1>
+      <div class="sub">Gõ 1 ghi chú tự nhiên → AI phân loại (duyệt chi / lịch họp / deadline / giao việc / sự cố) và tự ghi vào Sổ Thư ký (Google Sheet).</div>
+      <div class="box" style="max-width:680px">
+        <textarea id="secNote" placeholder="VD: duyệt chi $50 chạy ads tháng 6 / họp nhà cung cấp thứ 5 14h / deadline 3 video KOC 12/6 / nhắc Marketing nộp báo cáo / sự cố web load chậm" style="min-height:84px"></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="genNote()">🗒️ Ghi sổ</button>
+          <button class="btn ghost" onclick="document.getElementById('secNote').value='';document.getElementById('secResult').style.display='none'">Xoá</button>
+          <span id="secStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="secResult" style="margin-top:14px;display:none"><div id="secBody"></div></div>
+      <div class="box" style="margin-top:14px"><h4>ℹ️ Sắp bật</h4><p style="font-size:12.5px;color:var(--muted)">Nhắc tự động qua Telegram (việc đến hạn + nhắc phòng ban nộp báo cáo checklist mỗi ngày) — cần Telegram chat ID của bạn để kích hoạt.</p></div>
+    </section>
+
+    <!-- CAMPAIGN IN A BOX -->
+    <section class="view" id="campaign">
+      <h1>Campaign-in-a-Box 🚀 <span style="font-size:12px;color:var(--muted)">1 lệnh → cả gói</span></h1>
+      <div class="sub">Nhập 1 chủ đề/sản phẩm → AI dựng đồng bộ: bài blog SEO + 3 email welcome + 5 hook TikTok + 2 góc ad. Tất cả qua gateway (brain phân tầng), brand-checked, Safe Mode.</div>
+      <div class="box" style="max-width:680px">
+        <div class="lbl">Chủ đề / sản phẩm (để trống = Ceenor Tide)</div>
+        <input id="cmpTopic" placeholder="VD: small-space laundry for dorm life / Black Friday Ceenor Tide" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff">
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="genCampaign()">🚀 Dựng chiến dịch</button>
+          <span id="cmpStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="cmpResult" style="margin-top:14px;display:none"><div id="cmpBody"></div></div>
+    </section>
+
+    <!-- EMAIL STUDIO -->
+    <section class="view" id="email">
+      <h1>Email Studio ✉️ <span style="font-size:12px;color:var(--muted)">Klaviyo · AI</span></h1>
+      <div class="sub">Sinh chuỗi email nháp (Welcome, Bỏ giỏ, Browse, Sau mua, Winback) cho khách bếp/nhà nhỏ → copy dán sang Klaviyo. Brand voice quiet-luxury, không health claim, không bịa số.</div>
+      <div class="box" style="max-width:640px">
+        <div class="lbl">Loại flow</div>
+        <select id="emFlow" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff">
+          <option value="welcome">Welcome (3 email)</option>
+          <option value="abandoned">Bỏ giỏ hàng (3)</option>
+          <option value="browse">Browse abandonment (2)</option>
+          <option value="postpurchase">Sau mua / Post-purchase (3)</option>
+          <option value="winback">Winback (2)</option>
+        </select>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="genEmail()">✉️ Soạn chuỗi email</button>
+          <span id="emStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="emResult" style="margin-top:14px;display:none"><div id="emBody"></div></div>
+      <div class="box" style="margin-top:14px"><h4>📋 Cách dùng</h4><p style="font-size:12.5px;color:var(--muted)">Mỗi email có nút Copy cho Subject / Preview / Body HTML. Sang Klaviyo → tạo email trong flow → dán HTML (chế độ &lt;/&gt;), dán subject + preview. Placeholder <code>{{ first_name }}</code>, <code>{{ product_url }}</code>, <code>{{ offer }}</code> Klaviyo tự điền.</p></div>
+    </section>
+
+    <!-- BLOG SEO -->
+    <section class="view" id="blog">
+      <h1>Viết bài SEO ✍️ <span style="font-size:12px;color:var(--muted)">Blog Shopify · AI</span></h1>
+      <div class="sub">Nhập chủ đề → AI viết bài chuẩn SEO (title/slug/meta/tags/body) bằng Groq llama-3.3-70b → tự đăng lên blog Shopify Ceenor (News). Brand voice quiet-luxury, không health claim, không bịa số.</div>
+      <div class="box" style="max-width:680px">
+        <div class="lbl">Chủ đề (để trống = AI tự chọn)</div>
+        <input id="blogTopic" placeholder="VD: small-space laundry tips for renters / how to wash delicates without a machine" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff">
+        <div class="lbl" style="margin-top:10px">Focus keyphrase (tuỳ chọn)</div>
+        <input id="blogKw" placeholder="VD: mini washing machine for apartments" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff">
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="genBlog()">✍️ Viết & đăng bài</button>
+          <button class="btn ghost" onclick="document.getElementById('blogTopic').value='';document.getElementById('blogKw').value='';document.getElementById('blogResult').style.display='none'">Xoá</button>
+          <span id="blogStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="blogResult" style="margin-top:14px;display:none">
+        <div id="blogBody" style="font-size:13.5px;line-height:1.7;color:#2d3436"></div>
+      </div>
+      <div class="box" style="margin-top:14px"><h4>ℹ️ Cần 1 lần cài đặt để tự đăng</h4><p style="font-size:12.5px;color:var(--muted)">Để bài tự lên Shopify, node <b>Đăng Shopify</b> trong workflow cần 1 credential <code>Shopify Admin token</code> (Custom app, scope <code>write_content</code>). Chưa gán thì AI vẫn viết bài đầy đủ và trả về đây để bạn copy/đăng tay.</p></div>
+    </section>
+
   </main>
 
   <div class="ov" id="ov" onclick="if(event.target===this)closeM()"><div class="modal"><span class="mx" onclick="closeM()">×</span>
@@ -237,6 +371,11 @@ const DEPT_WEBHOOK=N8N_BASE+"/webhook/ceenor-dept";
 const RUN_WEBHOOK=N8N_BASE+"/webhook/ceenor-run";
 const FINANCE_WEBHOOK=N8N_BASE+"/webhook/ceenor-finance";
 const LOG_WEBHOOK=N8N_BASE+"/webhook/ceenor-log";
+const BLOG_WEBHOOK=N8N_BASE+"/webhook/ceenor-blog";
+const EMAIL_WEBHOOK=N8N_BASE+"/webhook/ceenor-email";
+const CAMPAIGN_WEBHOOK=N8N_BASE+"/webhook/ceenor-campaign";
+const SECRETARY_WEBHOOK=N8N_BASE+"/webhook/ceenor-secretary";
+const IMAGE_WEBHOOK=N8N_BASE+"/webhook/ceenor-image";
 const FIN={
  url:'https://docs.google.com/spreadsheets/d/1cZpUUJBkjvLQqjjrsP-jTEW4aOi4x0tqcEJCUVGEP74/edit',
  head:[['Mục tiêu DT','264.000.000 ₫/th'],['DT/ngày','8.800.000 ₫'],['AOV','700.000 ₫'],['Đơn cần/ngày','~13'],['CM','25% (min 23%)'],['Net target','15% · Thuế 20%'],['BEP','264tr ₫'],['ROAS min','6.67x'],['Định phí','66tr (25% DT)'],['Nhân sự','46tr · 7 người'],['Vốn/Hồi vốn','200tr · 6 th']],
@@ -423,7 +562,7 @@ async function genRun(){
   try{
     const res=await fetch(RUN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'trigger=dashboard'});
     const d=await res.json();
-    rep.textContent=(d.ceo||'(trống)')+'\n\n──────────\n🏢 BÁO CÁO TỪNG PHÒNG\n\n'+(d.departments||'');
+    rep.innerHTML=mdLite((d.ceo||'(trống)')+'\n\n──────────\n🏢 BÁO CÁO TỪNG PHÒNG\n\n'+(d.departments||''));
     box.style.display='block';
     st.textContent='✅ Chạy xong cả công ty · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
   }catch(e){ st.textContent='🟡 Lỗi: '+e.message; }
@@ -434,7 +573,7 @@ async function genCEO(){
   st.textContent='⏳ CEO đang quét dữ liệu & phân tích...';
   try{
     const res=await fetch(CEO_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'report='+encodeURIComponent(v||'Tổng hợp tình hình tổng thể.')});
-    const d=await res.json(); rep.textContent=d.report||'(trống)';box.style.display='block';
+    const d=await res.json(); rep.innerHTML=mdLite(d.report||'(trống)');box.style.display='block';
     st.textContent='✅ '+(d.model||'')+' · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
   }catch(e){ st.textContent='🟡 Lỗi gọi CEO webhook: '+e.message; }
 }
@@ -459,7 +598,7 @@ async function dispatchApproved(key){
   try{
     const res=await fetch(DEPT_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'dept='+key+'&task='+encodeURIComponent(task)});
     const d=await res.json();
-    box.textContent=d.reply||d.report||'(không có nội dung)';box.style.display='block';
+    box.innerHTML=mdLite(d.reply||d.report||'(không có nội dung)');box.style.display='block';
     st.textContent='✅ '+dept.name+' đã trả bản nháp · '+(d.model||'groq')+' · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN')+' — xem & duyệt gửi thủ công.';
   }catch(e){ st.textContent='🟡 Lỗi gọi phòng '+dept.name+': '+e.message; }
 }
@@ -473,9 +612,126 @@ async function sendTask(){
   try{
     const res=await fetch(TASK_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'task='+encodeURIComponent(t)});
     const d=await res.json();
-    rep.textContent=d.reply||'(không có nội dung)';box.style.display='block';
+    rep.innerHTML=mdLite(d.reply||'(không có nội dung)');box.style.display='block';
     st.textContent='✅ Xong · '+(d.model||'gemini')+' · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
   }catch(e){ st.textContent='🟡 Không gọi được webhook: '+e.message; }
+}
+
+// ---- Tạo ảnh ----
+async function genImage(){
+  const prompt=(document.getElementById('imgPrompt').value||'').trim();
+  if(!prompt){toast('Nhập mô tả ảnh đã nhé');return;}
+  const st=document.getElementById('imgStatus'),box=document.getElementById('imgResult');
+  st.textContent='⏳ Đang xin URL ảnh...';
+  try{
+    const res=await fetch(IMAGE_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:prompt})});
+    const d=await res.json();
+    if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); return; }
+    box.innerHTML='<img src="'+d.image_url+'" alt="ảnh Ceenor" style="max-width:100%;border-radius:12px;display:block" onload="document.getElementById(\'imgStatus\').textContent=\'✅ Xong\'" onerror="document.getElementById(\'imgStatus\').textContent=\'🟡 Render lỗi/đông, bấm tạo lại\'"><div style="margin-top:8px"><a class="link" href="'+d.image_url+'" target="_blank">↗ Mở/Tải ảnh full</a></div>';
+    box.style.display='block';
+    st.textContent='⏳ Đang render (~10-20s)...';
+  }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
+}
+
+// ---- Thư ký AI ----
+async function genNote(){
+  const note=(document.getElementById('secNote').value||'').trim();
+  if(!note){toast('Nhập ghi chú đã nhé');return;}
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const st=document.getElementById('secStatus'),box=document.getElementById('secResult'),body=document.getElementById('secBody');
+  st.textContent='⏳ Thư ký đang ghi sổ...';
+  try{
+    const res=await fetch(SECRETARY_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:note})});
+    const d=await res.json();
+    if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); box.style.display='none'; return; }
+    const lbl={expense:'Duyệt chi',meeting:'Lịch họp',deadline:'Deadline',task:'Giao việc',incident:'Sự cố',other:'Ghi chú'}[d.type]||'Ghi chú';
+    let h='<div style="font-size:15px">'+(d.icon||'🗒️')+' <b>'+lbl+'</b> — '+esc(d.title||'')+'</div><div style="margin-top:8px;font-size:13px;color:#374151">';
+    if(d.amount) h+='💸 Số tiền: '+esc(d.amount+' '+(d.currency||''))+'<br>';
+    if(d.due_date) h+='📅 Hạn/giờ: '+esc(d.due_date+' '+(d.time||''))+'<br>';
+    if(d.dept) h+='🏢 Phòng: '+esc(d.dept)+'<br>';
+    if(d.note) h+='📝 '+esc(d.note)+'<br>';
+    h+='</div><div style="margin-top:8px;color:#16a34a;font-size:12px">✅ Đã ghi vào Sổ Thư ký'+(d.remind?' · 🔔 cần nhắc':'')+'.</div>';
+    body.innerHTML=h; box.style.display='block';
+    document.getElementById('secNote').value='';
+    st.textContent='✅ '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
+}
+
+// ---- Campaign in a Box ----
+async function genCampaign(){
+  const topic=(document.getElementById('cmpTopic').value||'').trim();
+  const st=document.getElementById('cmpStatus'),box=document.getElementById('cmpResult'),body=document.getElementById('cmpBody');
+  st.textContent='⏳ Đang dựng cả chiến dịch (~40-60s)...';
+  try{
+    const res=await fetch(CAMPAIGN_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:topic})});
+    const d=await res.json();
+    if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); return; }
+    window._cmp=d;
+    const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let h='';
+    if(d.blog&&d.blog.title){ h+='<div class="box" style="margin-bottom:10px"><b>📝 Blog:</b> '+esc(d.blog.title)+(d.blog.published?(' — <a class="link" href="'+d.blog.url+'" target="_blank">đã đăng ↗</a>'):' <span style="color:#d97706">(nháp)</span>')+'<div style="font-size:12px;color:var(--muted);margin-top:3px">'+esc(d.blog.meta)+'</div><details style="margin-top:6px"><summary style="cursor:pointer;font-size:12px">⤢ Xem/Copy HTML</summary><div style="margin-top:6px"><button class="btn ghost" style="padding:2px 8px;font-size:11px" onclick="copyText(window._cmp.blog.body_html)">copy HTML</button></div><textarea readonly onclick="this.select()" style="width:100%;min-height:110px;font-size:11px;font-family:monospace;background:#faf8fe;border:1px solid var(--line);border-radius:8px;padding:7px;margin-top:6px">'+esc(d.blog.body_html)+'</textarea></details></div>'; }
+    if((d.hooks||[]).length){ h+='<div class="box" style="margin-bottom:10px"><b>🎬 5 Hook TikTok:</b><ol style="margin:6px 0 0 18px;font-size:13px;line-height:1.6">'+d.hooks.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol></div>'; }
+    if((d.ad_angles||[]).length){ h+='<div class="box" style="margin-bottom:10px"><b>📣 2 Góc Ad:</b>'+d.ad_angles.map(a=>'<div style="margin-top:8px;font-size:13px;border-top:1px solid var(--line);padding-top:6px"><b>'+esc(a.angle||'')+'</b><br><b>'+esc(a.headline||'')+'</b><br><span style="color:#555">'+esc(a.primary_text||'')+'</span></div>').join('')+'</div>'; }
+    if((d.emails||[]).length){ h+='<div class="box"><b>✉️ '+d.emails.length+' Email Welcome:</b>'+d.emails.map((e,i)=>'<div style="margin-top:6px;font-size:13px">'+(i+1)+'. '+esc(e.subject||'')+' <button class="btn ghost" style="padding:2px 7px;font-size:11px" onclick="copyText(window._cmp.emails['+i+'].body_html)">copy HTML</button></div>').join('')+'</div>'; }
+    body.innerHTML=h; box.style.display='block';
+    st.textContent='✅ Xong cả gói · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
+}
+
+// ---- Email Studio ----
+async function genEmail(){
+  const flow=document.getElementById('emFlow').value;
+  const st=document.getElementById('emStatus'),box=document.getElementById('emResult'),body=document.getElementById('emBody');
+  st.textContent='⏳ Đang soạn email...';
+  try{
+    const res=await fetch(EMAIL_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({flow:flow})});
+    const d=await res.json();
+    if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); box.style.display='none'; return; }
+    window._emails=d.emails||[];
+    const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let h='';
+    (d.emails||[]).forEach((e,i)=>{
+      h+='<div class="box" style="margin-bottom:10px"><div style="font-size:12px;color:var(--muted)">📧 Email '+(e.n||i+1)+' · '+esc(e.goal||'')+'</div>';
+      h+='<div style="margin-top:6px"><b>Subject:</b> '+esc(e.subject||'')+' <button class="btn ghost" style="padding:2px 8px;font-size:11px" onclick="copyText(window._emails['+i+'].subject)">copy</button></div>';
+      h+='<div><b>Preview:</b> '+esc(e.preview||'')+' <button class="btn ghost" style="padding:2px 8px;font-size:11px" onclick="copyText(window._emails['+i+'].preview)">copy</button></div>';
+      h+='<div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">Body HTML</b><button class="btn" style="padding:3px 10px;font-size:11px" onclick="copyText(window._emails['+i+'].body_html)">⧉ Copy HTML</button></div>';
+      h+='<textarea readonly onclick="this.select()" style="width:100%;min-height:90px;margin-top:4px;border:1px solid var(--line);border-radius:8px;padding:7px;font-size:11px;font-family:monospace;background:#faf8fe;color:#374151">'+esc(e.body_html||'')+'</textarea></div>';
+    });
+    body.innerHTML=h; box.style.display='block';
+    st.textContent='✅ '+(d.count||0)+' email · '+(d.flow||'')+' · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
+}
+
+// ---- Blog SEO writer ----
+async function genBlog(){
+  const topic=(document.getElementById('blogTopic').value||'').trim();
+  const kw=(document.getElementById('blogKw').value||'').trim();
+  const st=document.getElementById('blogStatus'),box=document.getElementById('blogResult'),body=document.getElementById('blogBody');
+  st.textContent='⏳ Đang viết bài SEO (~15-25s)...';
+  try{
+    const res=await fetch(BLOG_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:topic,keyphrase:kw})});
+    const d=await res.json();
+    if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); box.style.display='none'; return; }
+    window._blog=d;
+    const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const row=(label,val,key)=>'<div style="display:flex;gap:8px;align-items:flex-start;margin-top:8px"><div style="min-width:96px;color:#6b7280;font-size:12px;padding-top:2px">'+label+'</div><div style="flex:1;font-size:13px">'+esc(val||'—')+'</div><button class="btn ghost" style="padding:3px 9px;font-size:12px" onclick="copyText(window._blog.'+key+'||\'\')">Copy</button></div>';
+    let h='';
+    if(d.published){ h+='<div style="color:#16a34a;font-weight:700">✅ Đã đăng lên Shopify</div><a class="link" href="'+d.url+'" target="_blank">↗ '+d.url+'</a>'; }
+    else { h+='<div style="color:#d97706;font-weight:700">📝 Bài đã sẵn sàng — copy & đăng tay</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Vào Shopify admin → Blog posts → Add → dán từng phần dưới (phần Nội dung dán ở chế độ <code>&lt;/&gt;</code> Show HTML).</div>'; }
+    h+=row('Title',d.title,'title');
+    h+=row('Slug',d.slug,'slug');
+    h+=row('Meta desc',d.meta,'meta');
+    h+=row('Keyphrase',d.focus_keyphrase,'focus_keyphrase');
+    h+=row('Tags',d.tags,'tags');
+    if(d.image_prompt) h+=row('Ảnh bìa',d.image_prompt,'image_prompt');
+    if(d.body_html){
+      h+='<div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:13px">Nội dung (HTML thô — dán vào Shopify)</b><button class="btn" style="padding:5px 12px;font-size:12px" onclick="copyText(window._blog.body_html)">⧉ Copy HTML</button></div>';
+      h+='<textarea readonly onclick="this.select()" style="width:100%;min-height:150px;margin-top:6px;border:1px solid var(--line);border-radius:8px;padding:9px;font-size:11.5px;font-family:monospace;background:#faf8fe;color:#374151">'+esc(d.body_html)+'</textarea>';
+      h+='<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px">👁 Xem bản render</summary><div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px;font-size:13.5px;line-height:1.7;color:#2d3436">'+d.body_html+'</div></details>';
+    }
+    body.innerHTML=h; box.style.display='block';
+    st.textContent='✅ Xong · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
 }
 
 // ---- CRM ----
@@ -563,6 +819,11 @@ function openAgent(id){const a=idx[id];if(!a)return;
 function closeM(){document.getElementById('ov').classList.remove('open')}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
 function copyText(v){navigator.clipboard.writeText(v).then(()=>toast('Đã copy ✓'))}
+function mdLite(t){let s=String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+ s=s.replace(/^\s*#{1,6}\s*(.+)$/gm,'<b>$1</b>');
+ s=s.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/__(.+?)__/g,'<b>$1</b>');
+ s=s.replace(/^\s*[\*\-\+]\s+/gm,'• ').replace(/`{1,3}/g,'');
+ return s;}
 function copyVal(id){copyText(document.getElementById(id).value)}
 function copyTask(cmd){const t=document.getElementById('taskIn').value.trim();copyText(t?cmd+' '+t:cmd)}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM()});
@@ -577,6 +838,21 @@ document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>{
 });
 // preload CRM for overview count
 loadCRM().then(()=>{document.getElementById('ovCust').firstChild.textContent=CRM.length+' ';});
+
+// ===== Control Room: Diagnose + Auto Loop =====
+const DX_FIELDS={
+ product:[['velocity','Velocity 72h (%)','number'],['advertisers','Số advertiser cùng SP','number'],['gross_margin_pct','Biên gộp (%)','number'],['gross_margin_usd','Biên gộp (USD)','number'],['cm_per_order','CM/đơn (VND)','number'],['is_old_viral','Video viral cũ (>3 tháng)?','check']],
+ creative:[['impressions','Impressions','number'],['thumb_stop_rate','Thumb-stop (0..1)','number'],['retention_drop_at','Rớt mạnh ở giây','number'],['outbound_ctr','Outbound CTR (0..1)','number'],['price_changed_72h','Giá vừa đổi 72h?','check']],
+ traffic:[['cpm','CPM (USD)','number'],['cpc','CPC (USD)','number'],['orders','Đơn','number'],['clicks','Clicks','number'],['learning_phase','Đang learning-phase?','check']],
+ conversion:[['atc_rate','ATC rate (0..1)','number'],['sessions','Sessions','number'],['mobile_lcp','Mobile LCP (s) / NO_LCP','text'],['checkout_abandon','Checkout abandon (0..1)','number'],['initiate_checkout','Initiate checkout (số)','number']]
+};
+function dxRender(){var st=document.getElementById('dxStage').value,f=DX_FIELDS[st],h='';for(var i=0;i<f.length;i+=2){h+='<div class="dxrow">';[f[i],f[i+1]].forEach(function(x){if(!x){h+='<div></div>';return;}if(x[2]==='check'){h+='<div class="dxchk"><input type="checkbox" id="dxf_'+x[0]+'"><label style="margin:0">'+x[1]+'</label></div>';}else{h+='<div><label>'+x[1]+'</label><input id="dxf_'+x[0]+'" type="'+(x[2]==='text'?'text':'number')+'" step="any"></div>';}});h+='</div>';}document.getElementById('dxFields').innerHTML=h;}
+function dxCollect(){var st=document.getElementById('dxStage').value,f=DX_FIELDS[st],sig={};f.forEach(function(x){var el=document.getElementById('dxf_'+x[0]);if(!el)return;if(x[2]==='check'){if(el.checked)sig[x[0]]=true;}else{var v=el.value.trim();if(v!=='')sig[x[0]]=(x[2]==='text'&&isNaN(+v))?v:+v;}});return {stage:st,signal:sig};}
+function dxColor(v){v=v||'';if(/reject|cut|kill|fix|shipping|audience|landing|thin|saturated|dead|invalid/i.test(v))return '#dc2626';if(/inconclusive|hold|handoff|confounded|recommend/i.test(v))return '#d97706';if(/ok|pass|primed/i.test(v))return '#16a34a';return '#7c3aed';}
+async function dxRun(){var st=document.getElementById('dxStatus'),box=document.getElementById('dxVerdict');st.textContent='⏳ Đang chẩn đoán...';box.classList.remove('show');try{var d=await (await fetch(N8N_BASE+'/webhook/ceenor-diagnose',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(dxCollect())})).json();var c=dxColor(d.verdict);box.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-weight:800;font-size:14px;padding:5px 12px;border-radius:9px;color:#fff;background:'+c+'">'+d.verdict+'</span><span class="chip">→ '+(d.to||'?')+'</span>'+(d.hard_action?'<span class="chip" style="background:#fee;color:#b91c1c">HARD ACTION</span>':'')+(d.needs_human?'<span class="chip">cần Duyệt</span>':'')+'</div><div style="font-size:12.5px;color:#374151;line-height:1.7;margin-top:8px"><b>Culprit:</b> '+((d.culprit||[]).join(', ')||'—')+'<br><b>Confidence:</b> '+d.confidence+' · <b>Data quality:</b> '+d.data_quality+(d.gate?' · <b>Gate:</b> '+d.gate:'')+'</div><div class="dxbar"><i style="width:'+Math.round((d.confidence||0)*100)+'%;background:'+c+'"></i></div>'+(d.reason?'<div style="font-size:12.5px;margin-top:6px">📌 '+d.reason+'</div>':'')+(d.note?'<div style="font-size:12.5px;margin-top:6px">📝 '+d.note+'</div>':'')+(d.action?'<div style="font-size:12.5px;margin-top:6px"><b>Hành động:</b> '+d.action+'</div>':'')+(d.action?'<button class="btn ghost" style="margin-top:10px" onclick="dxDispatch(\''+d.to+'\',\''+d.verdict+'\',\''+((d.culprit||[]).join(','))+'\')">🛠️ Giao phòng tạo nháp</button><pre id="dxDispatchOut" class="dxpre" style="display:none"></pre>':'');box.classList.add('show');st.textContent='✅ Xong';}catch(e){st.textContent='🟡 Lỗi: '+e.message;}}
+async function dxDispatch(to,verdict,culprit){var out=document.getElementById('dxDispatchOut');out.style.display='block';out.textContent='⏳ Phòng đang soạn nháp (Safe Mode)...';var task='✅ Chế độ An toàn — chỉ TẠO NHÁP, không gửi/đăng/chi tiền. Verdict: "'+verdict+'" (nguyên nhân: '+culprit+'), giao "'+to+'". Đề xuất hành động CỤ THỂ + nháp dùng được ngay cho Ceenor, kèm cách đo.';try{var d=await (await fetch(N8N_BASE+'/webhook/ceenor-task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({task:task})})).json();out.textContent=d.reply||'(trống)';}catch(e){out.textContent='🟡 Lỗi: '+e.message;}}
+async function dxOrch(){var st=document.getElementById('orStatus'),box=document.getElementById('orVerdict');st.textContent='⏳ Đang quét CRM & soạn nháp...';box.classList.remove('show');try{var d=await (await fetch(N8N_BASE+'/webhook/ceenor-orchestrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'manual_scan'})})).json();box.innerHTML='<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span style="font-weight:800;font-size:14px;padding:5px 12px;border-radius:9px;color:#fff;background:'+(d.targets_count>0?'#7c3aed':'#6b7280')+'">retention · '+d.targets_count+' target</span><span class="chip">quét '+d.scanned+' khách</span><span class="chip">Safe Mode</span></div><div style="font-size:12.5px;color:#374151;line-height:1.7;margin-top:8px">'+d.note+'</div>'+(d.draft_winback?'<div style="font-size:12.5px;margin-top:6px"><b>Nháp email winback:</b></div><pre class="dxpre">'+String(d.draft_winback).replace(/</g,'&lt;')+'</pre><button class="btn" style="background:#16a34a" onclick="this.textContent=String.fromCodePoint(9989)+\' Đã đánh dấu Duyệt (gửi tay)\'">✅ Duyệt → gửi thủ công</button>':'');box.classList.add('show');st.textContent='✅ Xong';}catch(e){st.textContent='🟡 Lỗi: '+e.message;}}
+dxRender();
 </script>
 </body>
 </html>
