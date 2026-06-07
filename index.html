@@ -92,7 +92,8 @@
   <aside class="side">
     <div class="brand"><div class="logo">◆</div> Ceenor AIOS</div>
     <div class="scat">⚡ Trung tâm</div>
-    <div class="nav active" data-view="do"><span class="ic">⚡</span> Ra lệnh <span class="badge live">AI</span></div>
+    <div class="nav active" data-view="brief"><span class="ic">🛰️</span> Bản tin sáng <span class="badge live">AI</span></div>
+    <div class="nav" data-view="do"><span class="ic">⚡</span> Ra lệnh <span class="badge live">AI</span></div>
     <div class="nav" data-view="crm"><span class="ic">👥</span> CRM <span class="badge live" id="crmBadge">live</span></div>
     <div class="scat">✍️ Xưởng nội dung</div>
     <div class="nav" data-view="blog"><span class="ic">✍️</span> Viết bài SEO <span class="badge live">AI</span></div>
@@ -300,8 +301,19 @@
       <div class="box" style="margin-top:14px"><h4>ℹ️ Sắp bật</h4><p style="font-size:12.5px;color:var(--muted)">Nhắc tự động qua Telegram (việc đến hạn + nhắc phòng ban nộp báo cáo checklist mỗi ngày) — cần Telegram chat ID của bạn để kích hoạt.</p></div>
     </section>
 
+    <!-- BẢN TIN SÁNG -->
+    <section class="view active" id="brief">
+      <h1>Bản tin sáng 🛰️ <span style="font-size:12px;color:var(--muted)">CEO tự đọc số & đề xuất việc</span></h1>
+      <div class="sub">Mở app là thấy: sức khỏe công ty hôm nay + việc CEO đề xuất. Bấm <b>Duyệt & chạy</b> là cả công ty thực thi (Safe Mode). Bạn không cần nghĩ phải làm gì.</div>
+      <div style="margin:10px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn" onclick="loadBrief(true)">🔄 Tạo bản tin hôm nay</button>
+        <span id="brStatus" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+      <div id="brBody"></div>
+    </section>
+
     <!-- RA LỆNH TỔNG -->
-    <section class="view active" id="do">
+    <section class="view" id="do">
       <h1>Ra lệnh ⚡ <span style="font-size:12px;color:var(--muted)">1 lệnh → cả công ty tự chạy</span></h1>
       <div class="sub">Gõ 1 lệnh tự nhiên → CEO tự hiểu, lập kế hoạch, tự gọi đúng các phòng/công cụ liên quan và trả về <b>kết quả CUỐI dùng được ngay</b>. Đây là nơi bạn làm việc chính.</div>
       <div class="box" style="max-width:720px">
@@ -399,6 +411,7 @@ const BLOG_WEBHOOK=N8N_BASE+"/webhook/ceenor-blog";
 const EMAIL_WEBHOOK=N8N_BASE+"/webhook/ceenor-email";
 const CAMPAIGN_WEBHOOK=N8N_BASE+"/webhook/ceenor-campaign";
 const DO_WEBHOOK=N8N_BASE+"/webhook/ceenor-do";
+const BRIEF_WEBHOOK=N8N_BASE+"/webhook/ceenor-brief";
 const SECRETARY_WEBHOOK=N8N_BASE+"/webhook/ceenor-secretary";
 const IMAGE_WEBHOOK=N8N_BASE+"/webhook/ceenor-image";
 const PUBLISH_WEBHOOK=N8N_BASE+"/webhook/ceenor-blog-publish";
@@ -716,6 +729,32 @@ async function genDo(){
   }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
 }
 
+// ---- Bản tin sáng (self-driving home) ----
+let briefLoaded=false;
+async function loadBrief(force){
+  if(briefLoaded&&!force) return;
+  const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const st=document.getElementById('brStatus'),box=document.getElementById('brBody');
+  st.textContent='⏳ CEO đang đọc số & đề xuất việc...';
+  try{
+    const res=await fetch(BRIEF_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+    const d=await res.json();
+    if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); return; }
+    briefLoaded=true; window._brief=d;
+    const H=d.health||{};
+    let h='<div class="kpis">'+card('Khách',H.total||0,'#7c3aed')+card('Đã mua',H.buyers||0,'#16a34a')+card('Doanh thu','$'+(H.rev||0),'#d97706')+card('Lead chưa mua',H.leads||0,'#0ea5e9')+card('⚠️ Churn-risk',H.churnRisk||0,'#dc2626')+'</div>';
+    if(d.health_note) h+='<div class="box" style="margin-top:6px;font-size:14px">💬 '+esc(d.health_note)+'</div>';
+    h+='<h4 style="margin:16px 0 8px">🎯 Việc CEO đề xuất hôm nay — Duyệt là chạy</h4>';
+    (d.proposals||[]).forEach((p,i)=>{
+      h+='<div class="box" style="margin-bottom:10px"><div style="font-weight:700;font-size:14px">'+esc(p.title||'')+'</div><div style="font-size:12.5px;color:var(--muted);margin:4px 0">'+esc(p.why||'')+'</div><div style="font-size:13px;background:#faf8fe;border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:8px">📋 '+esc(p.command||'')+'</div><button class="btn" style="background:#16a34a" onclick="approveProposal('+i+')">✅ Duyệt & chạy</button> <button class="btn ghost" onclick="this.closest(\'.box\').style.opacity=\'0.45\'">✕ Bỏ</button></div>';
+    });
+    if(!(d.proposals||[]).length) h+='<div class="box">Chưa có đề xuất — bấm "Tạo bản tin hôm nay".</div>';
+    box.innerHTML=h;
+    st.textContent='✅ '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi: '+e.message; }
+}
+function approveProposal(i){ const p=((window._brief||{}).proposals||[])[i]; if(!p)return; const nav=document.querySelector('.nav[data-view="do"]'); if(nav) nav.click(); setTimeout(()=>{ const el=document.getElementById('doCmd'); if(el){ el.value=p.command; genDo(); } },60); }
+
 // ---- Campaign in a Box ----
 async function genCampaign(){
   const topic=(document.getElementById('cmpTopic').value||'').trim();
@@ -835,6 +874,7 @@ async function loadCRM(force){
     document.getElementById('crmBadge').textContent='snap';
   }
   renderCRM();
+  if(typeof loadBrief==='function') loadBrief();
 }
 let crmSort={key:'clv',dir:-1};
 function crmSortBy(k){ if(crmSort.key===k) crmSort.dir*=-1; else { crmSort.key=k; crmSort.dir=-1; } renderCRM(); }
@@ -943,6 +983,7 @@ document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>{
  n.classList.add('active');document.getElementById(n.dataset.view).classList.add('active');
  if(n.dataset.view==='crm'&&!CRM.length) loadCRM();
  if(n.dataset.view==='log') loadLog();
+ if(n.dataset.view==='brief') loadBrief();
 });
 // preload CRM for overview count
 loadCRM().then(()=>{document.getElementById('ovCust').firstChild.textContent=CRM.length+' ';});
