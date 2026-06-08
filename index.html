@@ -99,6 +99,7 @@
     <div class="nav" data-view="blog"><span class="ic">✍️</span> Viết bài SEO <span class="badge live">AI</span></div>
     <div class="nav" data-view="email"><span class="ic">✉️</span> Email Studio <span class="badge live">AI</span></div>
     <div class="nav" data-view="campaign"><span class="ic">🚀</span> Campaign <span class="badge live">AI</span></div>
+    <div class="nav" data-view="research"><span class="ic">🔬</span> Nghiên cứu SP <span class="badge live">WPS</span></div>
     <div class="nav" data-view="image"><span class="ic">🖼️</span> Tạo ảnh</div>
     <div class="scat">🏢 Điều hành</div>
     <div class="nav" data-view="ceo"><span class="ic">👑</span> CEO Agent <span class="badge live">AI</span></div>
@@ -364,6 +365,23 @@
       <div class="box" id="cmpResult" style="margin-top:14px;display:none"><div id="cmpBody"></div></div>
     </section>
 
+    <!-- RESEARCH WPS -->
+    <section class="view" id="research">
+      <h1>Nghiên cứu sản phẩm 🔬 <span style="font-size:12px;color:var(--muted)">WPS · chấm điểm win</span></h1>
+      <div class="sub">Nhập niche/sản phẩm + dữ liệu thu thập (Douyin, Trends, đối thủ, giá vốn) → AI chấm 7 tiêu chí WPS, tự tính điểm, ra verdict Winner/Test/Fix/Skip + 6 dấu hiệu loại ngay. Insight tự lưu vào Trí nhớ cho phòng Marketing/Sản phẩm dùng lại.</div>
+      <div class="box" style="max-width:680px">
+        <div class="lbl">Sản phẩm / niche</div>
+        <input id="rsNiche" placeholder="VD: Máy đánh trứng cầm tay sạc USB-C mini" style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff">
+        <div class="lbl" style="margin-top:10px">Dữ liệu thu thập (càng nhiều càng chuẩn)</div>
+        <textarea id="rsData" placeholder="Douyin: top seller ~?đơn/tháng, video ?likes. Trend bao nhiêu tuần. Google Trends US + search/tháng. Số đối thủ US + dấu hiệu yếu. Giá vốn / giá bán. Cân nặng, ngày giao, kho US. Nhãn hiệu?" style="width:100%;min-height:110px;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff"></textarea>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="genResearch()">🔬 Chấm WPS</button>
+          <span id="rsStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="rsResult" style="margin-top:14px;display:none"><div id="rsBody"></div></div>
+    </section>
+
     <!-- EMAIL STUDIO -->
     <section class="view" id="email">
       <h1>Email Studio ✉️ <span style="font-size:12px;color:var(--muted)">Klaviyo · AI</span></h1>
@@ -433,6 +451,7 @@ const QC_WEBHOOK=N8N_BASE+"/webhook/ceenor-qc";
 const SECRETARY_WEBHOOK=N8N_BASE+"/webhook/ceenor-secretary";
 const IMAGE_WEBHOOK=N8N_BASE+"/webhook/ceenor-image";
 const PUBLISH_WEBHOOK=N8N_BASE+"/webhook/ceenor-blog-publish";
+const RESEARCH_WEBHOOK=N8N_BASE+"/webhook/ceenor-research";
 const FIN={
  url:'https://docs.google.com/spreadsheets/d/1cZpUUJBkjvLQqjjrsP-jTEW4aOi4x0tqcEJCUVGEP74/edit',
  head:[['Mục tiêu DT','264.000.000 ₫/th'],['DT/ngày','8.800.000 ₫'],['AOV','700.000 ₫'],['Đơn cần/ngày','~13'],['CM','25% (min 23%)'],['Net target','15% · Thuế 20%'],['BEP','264tr ₫'],['ROAS min','6.67x'],['Định phí','66tr (25% DT)'],['Nhân sự','46tr · 7 người'],['Vốn/Hồi vốn','200tr · 6 th']],
@@ -813,6 +832,32 @@ async function genCampaign(){
     if((d.emails||[]).length){ h+='<div class="box"><b>✉️ '+d.emails.length+' Email Welcome:</b>'+d.emails.map((e,i)=>'<div style="margin-top:6px;font-size:13px">'+(i+1)+'. '+esc(e.subject||'')+' <button class="btn ghost" style="padding:2px 7px;font-size:11px" onclick="copyText(window._cmp.emails['+i+'].body_html)">copy HTML</button></div>').join('')+'</div>'; }
     body.innerHTML=h; box.style.display='block';
     st.textContent='✅ Xong cả gói · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
+  }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
+}
+
+// ---- Nghiên cứu WPS ----
+async function genResearch(){
+  const niche=(document.getElementById('rsNiche').value||'').trim();
+  const data=(document.getElementById('rsData').value||'').trim();
+  const st=document.getElementById('rsStatus'),box=document.getElementById('rsResult'),body=document.getElementById('rsBody');
+  if(!niche){ st.textContent='🟡 Nhập sản phẩm/niche trước.'; return; }
+  st.textContent='⏳ Đang chấm WPS (~15-20s)...';
+  try{
+    const res=await fetch(RESEARCH_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({niche:niche,data:data})});
+    const d=await res.json();
+    if(d.ok===false){ st.textContent='🟡 '+(d.error||'Lỗi'); return; }
+    const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const vc={Winner:'#16a34a',Test:'#2563eb',Fix:'#d97706',Skip:'#dc2626'}[d.verdict]||'#6b7280';
+    const NM={douyin:'Tín hiệu Douyin (25%)',newness:'Độ mới trend (15%)',us_demand:'Cầu Mỹ (15%)',weak_competitors:'Đối thủ yếu (15%)',profit:'Lợi nhuận (15%)',ops:'Vận hành (10%)',risk:'Rủi ro (5%)'};
+    let h='<div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap"><span style="font-size:30px;font-weight:700">'+esc(d.wps)+'</span><span style="color:var(--muted)">/10</span><span style="background:'+vc+';color:#fff;padding:3px 12px;border-radius:20px;font-size:13px;font-weight:600">'+esc(d.verdict)+'</span><span style="color:var(--muted);font-size:13px">'+esc(d.band)+'</span></div>';
+    if((d.instant_kill||[]).length){ h+='<div style="margin-top:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:8px 10px;font-size:13px;color:#b91c1c"><b>⛔ Dấu hiệu loại ngay:</b> '+d.instant_kill.map(esc).join(' · ')+'</div>'; }
+    h+='<table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:13px">'+Object.keys(NM).map(k=>{const v=(d.scores||{})[k]; const w=Math.max(0,Math.min(10,+v||0))*10; return '<tr><td style="padding:5px 8px 5px 0;color:#444;white-space:nowrap">'+NM[k]+'</td><td style="padding:5px 0;width:55%"><div style="background:#eee;border-radius:6px;height:8px;overflow:hidden"><div style="width:'+w+'%;height:8px;background:'+vc+'"></div></div></td><td style="padding:5px 0 5px 8px;text-align:right;font-weight:600">'+esc(v)+'</td></tr>';}).join('')+'</table>';
+    if(d.action){ h+='<div style="margin-top:12px;font-size:13px"><b>▶ Hành động:</b> '+esc(d.action)+'</div>'; }
+    if(d.reasoning){ h+='<div style="margin-top:6px;font-size:12.5px;color:#555"><b>Vì sao:</b> '+esc(d.reasoning)+'</div>'; }
+    if((d.data_gaps||[]).length){ h+='<div style="margin-top:8px;font-size:12.5px;color:var(--muted)"><b>⚠ Dữ liệu còn thiếu:</b> '+d.data_gaps.map(esc).join(' · ')+'</div>'; }
+    h+='<div style="margin-top:8px;font-size:11.5px;color:var(--muted)">🧠 Đã lưu insight vào Trí nhớ.</div>';
+    body.innerHTML=h; box.style.display='block';
+    st.textContent='✅ Xong · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
   }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
 }
 
