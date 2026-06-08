@@ -104,6 +104,7 @@
     <div class="nav" data-view="ceo"><span class="ic">👑</span> CEO Agent <span class="badge live">AI</span></div>
     <div class="nav" data-view="company"><span class="ic">🏢</span> Phòng ban <span class="badge live" id="deptBadge">6</span></div>
     <div class="nav" data-view="secretary"><span class="ic">🗒️</span> Thư ký <span class="badge live">AI</span></div>
+    <div class="nav" data-view="memory"><span class="ic">🧠</span> Trí nhớ <span class="badge live">mem</span></div>
     <div class="nav" data-view="diagnose"><span class="ic">🩺</span> Chẩn đoán <span class="badge live">GIGO</span></div>
     <div class="nav" data-view="autoloop"><span class="ic">♻️</span> Auto Loop <span class="badge live">safe</span></div>
     <div class="nav" data-view="log"><span class="ic">📓</span> Nhật ký <span class="badge live">mem</span></div>
@@ -285,6 +286,21 @@
       <div class="box" id="imgResult" style="margin-top:14px;display:none"></div>
     </section>
 
+    <!-- TRÍ NHỚ -->
+    <section class="view" id="memory">
+      <h1>Trí nhớ công ty 🧠 <span style="font-size:12px;color:var(--muted)">Brand DNA · chính sách · quyết định</span></h1>
+      <div class="sub">Dạy AI những điều cần nhớ lâu dài. CEO & các agent đọc trí nhớ này trước khi làm → nhất quán, không lặp. (Bản tin sáng chỉ né lặp các "quyết định" đã làm.)</div>
+      <div class="box" style="max-width:720px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="memType" style="border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;background:#fff"><option value="brand">Brand DNA</option><option value="policy">Chính sách</option><option value="decision">Quyết định</option><option value="fact">Ghi chú</option></select>
+          <input id="memVal" placeholder="VD: Luôn nhấn USP 13 phút; tránh từ 'sterilize'; ưu đãi sinh viên 10%" style="flex:1;min-width:200px;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px">
+          <button class="btn" onclick="addMemory()">+ Ghi nhớ</button>
+          <span id="memStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div id="memList" style="margin-top:14px"></div>
+    </section>
+
     <!-- THƯ KÝ AI -->
     <section class="view" id="secretary">
       <h1>Thư ký AI 🗒️ <span style="font-size:12px;color:var(--muted)">Chief of Staff</span></h1>
@@ -412,6 +428,8 @@ const EMAIL_WEBHOOK=N8N_BASE+"/webhook/ceenor-email";
 const CAMPAIGN_WEBHOOK=N8N_BASE+"/webhook/ceenor-campaign";
 const DO_WEBHOOK=N8N_BASE+"/webhook/ceenor-do";
 const BRIEF_WEBHOOK=N8N_BASE+"/webhook/ceenor-brief";
+const MEMORY_WEBHOOK=N8N_BASE+"/webhook/ceenor-memory";
+const QC_WEBHOOK=N8N_BASE+"/webhook/ceenor-qc";
 const SECRETARY_WEBHOOK=N8N_BASE+"/webhook/ceenor-secretary";
 const IMAGE_WEBHOOK=N8N_BASE+"/webhook/ceenor-image";
 const PUBLISH_WEBHOOK=N8N_BASE+"/webhook/ceenor-blog-publish";
@@ -677,6 +695,27 @@ async function genImage(){
   }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
 }
 
+// ---- Trí nhớ ----
+async function loadMemory(){
+  const box=document.getElementById('memList'),st=document.getElementById('memStatus');
+  st.textContent='⏳ Đang tải trí nhớ...';
+  try{
+    const d=await (await fetch(MEMORY_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'recall'})})).json();
+    const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const col={brand:'#7c3aed',policy:'#0891b2',decision:'#16a34a',fact:'#6b7280'};
+    let h='';
+    (d.memory||[]).slice().reverse().forEach(m=>{ const c=col[m.type]||'#6b7280'; h+='<div class="box" style="margin-bottom:8px;font-size:13px"><span style="background:'+c+'22;color:'+c+';font-weight:700;font-size:11px;padding:2px 9px;border-radius:20px">'+esc(m.type)+'</span> '+esc(m.value||m.key)+'<div style="font-size:11px;color:#9ca3af;margin-top:3px">'+(m.at?new Date(m.at).toLocaleString('vi-VN'):'')+'</div></div>'; });
+    if(!(d.memory||[]).length) h='<div class="box">Chưa có gì. Thêm Brand DNA, chính sách, quyết định để AI nhớ lâu dài.</div>';
+    box.innerHTML=h; st.textContent='✅ '+(d.count||0)+' mục';
+  }catch(e){ st.textContent='🟡 '+e.message; }
+}
+async function addMemory(){
+  const type=document.getElementById('memType').value, val=(document.getElementById('memVal').value||'').trim();
+  if(!val){toast('Nhập nội dung cần nhớ');return;}
+  const st=document.getElementById('memStatus'); st.textContent='⏳ Đang ghi...';
+  try{ await fetch(MEMORY_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remember',type:type,value:val})}); document.getElementById('memVal').value=''; loadMemory(); }catch(e){ st.textContent='🟡 '+e.message; }
+}
+
 // ---- Thư ký AI ----
 async function genNote(){
   const note=(document.getElementById('secNote').value||'').trim();
@@ -753,7 +792,8 @@ async function loadBrief(force){
     st.textContent='✅ '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
   }catch(e){ st.textContent='🟡 Lỗi: '+e.message; }
 }
-function approveProposal(i){ const p=((window._brief||{}).proposals||[])[i]; if(!p)return; const nav=document.querySelector('.nav[data-view="do"]'); if(nav) nav.click(); setTimeout(()=>{ const el=document.getElementById('doCmd'); if(el){ el.value=p.command; genDo(); } },60); }
+function approveProposal(i){ const p=((window._brief||{}).proposals||[])[i]; if(!p)return; fetch(MEMORY_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'remember',type:'decision',key:p.title||'',value:'Founder duyệt: '+(p.command||'')})}).catch(()=>{}); const nav=document.querySelector('.nav[data-view="do"]'); if(nav) nav.click(); setTimeout(()=>{ const el=document.getElementById('doCmd'); if(el){ el.value=p.command; genDo(); } },60); }
+async function qcText(text,outId){ const o=document.getElementById(outId); if(!o)return; o.textContent='⏳ Chấm chất lượng...'; try{ const d=await (await fetch(QC_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:text})})).json(); if(d.ok===false){o.textContent='🟡 '+(d.error||'lỗi');return;} const col=d.verdict==='pass'?'#16a34a':'#d97706'; o.innerHTML='<b style="color:'+col+'">🚦 '+d.total+'/50 · '+(d.verdict==='pass'?'ĐẠT':'CẦN SỬA')+'</b>'+((d.flags&&d.flags.length)?(' · cờ: '+d.flags.slice(0,4).join(', ')):'')+(d.fix?('<br>💡 '+d.fix):''); }catch(e){ o.textContent='🟡 '+e.message; } }
 
 // ---- Campaign in a Box ----
 async function genCampaign(){
@@ -831,7 +871,7 @@ async function doBlog(topic,kw){
     h+='<div class="lbl" style="margin-top:8px">Nội dung (HTML — sửa trực tiếp được)</div><textarea id="bBody" style="width:100%;min-height:170px;border:1px solid var(--line);border-radius:8px;padding:9px;font-size:11.5px;font-family:monospace;background:#faf8fe;color:#374151">'+esc(d.body_html||'')+'</textarea>';
     h+='<details style="margin-top:8px"><summary style="cursor:pointer;font-size:13px">👁 Xem bản render</summary><div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px;font-size:13.5px;line-height:1.7;color:#2d3436">'+(d.body_html||'')+'</div></details>';
     h+='<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px"><div class="lbl">Chưa ưng? Góp ý để AI tạo lại:</div><div style="display:flex;gap:8px;margin-top:6px"><input id="blogFb" placeholder="VD: ngắn hơn, thêm phần so sánh, giọng trẻ hơn, nhấn USP 13 phút..." style="flex:1;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px"><button class="btn ghost" onclick="reviseBlog()">🔄 Tạo lại</button></div></div>';
-    h+='<div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" style="background:#16a34a" onclick="pushBlog()">🚀 Push lên Shopify</button><button class="btn ghost" onclick="copyText(document.getElementById(\'bBody\').value)">⧉ Copy HTML</button><span id="pushStatus" style="font-size:12px;color:var(--muted)"></span></div>';
+    h+='<div style="margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" style="background:#16a34a" onclick="pushBlog()">🚀 Push lên Shopify</button><button class="btn ghost" onclick="qcText(document.getElementById(\'bBody\').value,\'pushStatus\')">🚦 Chấm chất lượng</button><button class="btn ghost" onclick="copyText(document.getElementById(\'bBody\').value)">⧉ Copy HTML</button><span id="pushStatus" style="font-size:12px;color:var(--muted)"></span></div>';
     body.innerHTML=h; box.style.display='block';
     st.textContent='✅ Xong · '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
   }catch(e){ st.textContent='🟡 Lỗi gọi webhook: '+e.message; }
@@ -852,13 +892,18 @@ async function pushBlog(){
 
 // ---- CRM ----
 let CRM=[];
+// Phân loại theo HÀNH TRÌNH khách (DTC journey). Doanh thu chỉ tính đơn HOÀN THÀNH (orders>0).
 function classify(c){
-  if((c.clv||0)>=100) return 'VIP';
-  if((c.orders||0)>0) return 'Customer';
+  const o=c.orders||0, clv=c.clv||0, churn=c.churn||0;
   const t=c.lastEvent?Date.parse(c.lastEvent):0;
   const days=t?(Date.now()-t)/86400000:9999;
-  if(days<=14) return 'Engaged';
-  return 'Lead';
+  if(o>=2&&clv>=100) return 'VIP';            // mua lại nhiều + giá trị cao
+  if(o>=2) return 'Repeat';                    // khách mua lại
+  if(o>=1&&(churn>=50||days>90)) return 'Risk';// khách cũ sắp rời → cần cứu/win-back
+  if(o>=1) return 'Customer';                  // khách mới (1 đơn)
+  if(c.cartStatus==='cart'||c.cartStatus==='abandoned') return 'Cart'; // đã thêm giỏ, chưa mua
+  if(days<=30) return 'Lead';                  // đang tương tác, chưa mua
+  return 'Subscriber';                         // mới đăng ký, im ắng
 }
 async function loadCRM(force){
   const st=document.getElementById('crmStatus');st.textContent='⏳ Đang gọi n8n webhook...';
@@ -879,7 +924,7 @@ async function loadCRM(force){
 let crmSort={key:'clv',dir:-1};
 function crmSortBy(k){ if(crmSort.key===k) crmSort.dir*=-1; else { crmSort.key=k; crmSort.dir=-1; } renderCRM(); }
 function churnColor(v){ if(v==null) return '#9ca3af'; if(v>=50) return '#dc2626'; if(v>=25) return '#d97706'; return '#16a34a'; }
-function stageBadge(s){ const m={VIP:['#7c3aed','VIP'],Customer:['#16a34a','Khách'],Engaged:['#0ea5e9','Tương tác'],Lead:['#6b7280','Lead']}; const x=m[s]||m.Lead; return '<span style="background:'+x[0]+'22;color:'+x[0]+';font-weight:700;font-size:11px;padding:2px 9px;border-radius:20px">'+x[1]+'</span>'; }
+function stageBadge(s){ const m={VIP:['#7c3aed','👑 VIP'],Repeat:['#16a34a','🔁 Mua lại'],Customer:['#16a34a','🛍️ Khách mới'],Risk:['#dc2626','⚠️ Cần cứu'],Cart:['#d97706','🛒 Bỏ giỏ'],Lead:['#0ea5e9','🔥 Engaged'],Subscriber:['#6b7280','🌱 Subscriber']}; const x=m[s]||m.Subscriber; return '<span style="background:'+x[0]+'22;color:'+x[0]+';font-weight:700;font-size:11px;padding:2px 9px;border-radius:20px;white-space:nowrap">'+x[1]+'</span>'; }
 function renderCRM(){
   const q=(document.getElementById('crmSearch').value||'').toLowerCase();
   let rows=CRM.filter(c=>!q||[c.email,c.name,c.country].join(' ').toLowerCase().includes(q));
@@ -888,14 +933,14 @@ function renderCRM(){
   // KPIs mở rộng
   const total=rows.length;
   const withOrders=rows.filter(c=>(c.orders||0)>0).length;
-  const spent=Math.round(rows.reduce((s,c)=>s+(c.clv||0),0));
+  const spent=Math.round(rows.filter(c=>(c.orders||0)>0).reduce((s,c)=>s+(c.clv||0),0));
   const orders=rows.reduce((s,c)=>s+(c.orders||0),0);
   const aov=orders?Math.round(spent/orders):0;
-  const avgClv=total?Math.round(spent/total):0;
   const conv=total?Math.round(withOrders/total*100):0;
-  const churnRisk=rows.filter(c=>(c.churn||0)>=50).length;
+  const atRisk=rows.filter(c=>classify(c)==='Risk').length;
+  const carts=rows.filter(c=>classify(c)==='Cart').length;
   const k=document.getElementById('crmKpis');
-  k.innerHTML=card('Tổng khách',total,'#7c3aed')+card('Đã mua · '+conv+'%',withOrders,'#16a34a')+card('Doanh thu','$'+spent,'#d97706')+card('AOV','$'+aov,'#0891b2')+card('CLV TB','$'+avgClv,'#9333ea')+card('⚠️ Churn-risk',churnRisk,'#dc2626');
+  k.innerHTML=card('Tổng khách',total,'#7c3aed')+card('Đã mua · '+conv+'%',withOrders,'#16a34a')+card('Doanh thu ✓ (đơn xong)','$'+spent,'#d97706')+card('AOV','$'+aov,'#0891b2')+card('🛒 Bỏ giỏ',carts,'#d97706')+card('⚠️ Cần cứu',atRisk,'#dc2626');
   // BẢNG dữ liệu
   const th=(label,key)=>'<th onclick="crmSortBy(\''+key+'\')" style="cursor:pointer;text-align:left;padding:8px;font-size:12px;color:#6b7280;border-bottom:1px solid var(--line);white-space:nowrap">'+label+(crmSort.key===key?(crmSort.dir<0?' ▼':' ▲'):'')+'</th>';
   let t='<table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr>'+
@@ -917,7 +962,7 @@ function renderCRM(){
   t+='</tbody></table>';
   document.getElementById('crmTableBox').innerHTML=t;
   // kanban
-  const stages=[['Lead','Lead / Subscriber'],['Engaged','Đang tương tác'],['Customer','Khách hàng'],['VIP','VIP']];
+  const stages=[['Subscriber','🌱 Subscriber'],['Lead','🔥 Engaged'],['Cart','🛒 Bỏ giỏ'],['Customer','🛍️ Khách mới'],['Repeat','🔁 Mua lại'],['VIP','👑 VIP'],['Risk','⚠️ Cần cứu']];
   const kb=document.getElementById('kanban');kb.innerHTML='';
   stages.forEach(([key,label])=>{
     const list=rows.filter(c=>classify(c)===key);
@@ -984,6 +1029,7 @@ document.querySelectorAll('.nav').forEach(n=>n.onclick=()=>{
  if(n.dataset.view==='crm'&&!CRM.length) loadCRM();
  if(n.dataset.view==='log') loadLog();
  if(n.dataset.view==='brief') loadBrief();
+ if(n.dataset.view==='memory') loadMemory();
 });
 // preload CRM for overview count
 loadCRM().then(()=>{document.getElementById('ovCust').firstChild.textContent=CRM.length+' ';});
