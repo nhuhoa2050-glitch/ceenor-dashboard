@@ -240,7 +240,7 @@
         n8n base: <code id="baseTxt"></code><br>
         CRM webhook (live): <code id="crmTxt"></code><br>
         Form kịch bản: <a class="link" id="formLink" target="_blank">mở form</a></p></div>
-      <div class="box" style="margin-top:14px"><h4>🔐 Bảo mật</h4><p>API key n8n là JWT full-quyền — nên revoke sau mỗi phiên dùng chung. CRM webhook không lộ key (chỉ trả dữ liệu đã lọc).</p></div>
+      <div class="box" style="margin-top:14px"><h4>🔐 Bảo mật</h4><p><b>Auth 100% server-side:</b> mật khẩu gửi POST về n8n <code>ceenor-auth</code> → nhận <code>sessionToken</code> (HMAC 8h). CRM/dữ liệu nhạy cảm chỉ trả khi token hợp lệ — không lưu pass trên GitHub Pages, không gắn <code>?key=</code> vào URL. Đổi mật khẩu: n8n env <code>CEENOR_DASHBOARD_PASSWORD</code>.</p></div>
       <div class="box" style="margin-top:14px"><h4>Phase 2 (chưa làm)</h4><p>Sync Shopify orders + Meta lead-ads vào CRM (cần Shopify credential trong n8n). Hiện Shopify hiển thị từ snapshot.</p></div>
     </section>
     <!-- DIAGNOSE -->
