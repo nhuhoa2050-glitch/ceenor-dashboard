@@ -91,6 +91,7 @@
 <body>
   <aside class="side">
     <div class="brand"><div class="logo">◆</div> Ceenor AIOS</div>
+    <div style="font-size:10px;color:#7ef0b0;margin:-10px 8px 10px">local v2026-06-10 · Content OS</div>
     <div class="scat">⚡ Trung tâm</div>
     <div class="nav active" data-view="brief"><span class="ic">🛰️</span> Bản tin sáng <span class="badge live">AI</span></div>
     <div class="nav" data-view="do"><span class="ic">⚡</span> Ra lệnh <span class="badge live">AI</span></div>
@@ -99,6 +100,7 @@
     <div class="nav" data-view="blog"><span class="ic">✍️</span> Viết bài SEO <span class="badge live">AI</span></div>
     <div class="nav" data-view="email"><span class="ic">✉️</span> Email Studio <span class="badge live">AI</span></div>
     <div class="nav" data-view="campaign"><span class="ic">🚀</span> Campaign <span class="badge live">AI</span></div>
+    <div class="nav" data-view="contentos"><span class="ic">🧭</span> Content OS <span class="badge live">new</span></div>
     <div class="nav" data-view="research"><span class="ic">🔬</span> Nghiên cứu SP <span class="badge live">WPS</span></div>
     <div class="nav" data-view="image"><span class="ic">🖼️</span> Tạo ảnh</div>
     <div class="scat">🏢 Điều hành</div>
@@ -162,12 +164,12 @@
         <div id="taskReply" style="white-space:pre-wrap;font-size:13.5px;line-height:1.65;color:#374151"></div>
         <div style="margin-top:10px"><button class="btn ghost" onclick="copyText(document.getElementById('taskReply').textContent)">Copy báo cáo</button></div>
       </div>
-      <div class="box" style="margin-top:14px"><h4>💡 Mẹo</h4><p style="font-size:12.5px;color:var(--muted)">Giao việc rõ ràng → kết quả tốt hơn. AI làm được: viết caption/hook/kịch bản, brainstorm, lập kế hoạch, tổng hợp ý tưởng. Việc cần web realtime thì AI sẽ nêu giả định (chưa nối search). Telegram: chờ bot token hợp lệ.</p></div>
+      <div class="box" style="margin-top:14px"><h4>💡 Mẹo</h4><p style="font-size:12.5px;color:var(--muted)">Giao việc rõ ràng → kết quả tốt hơn. AI làm được: viết caption/hook/kịch bản, brainstorm, lập kế hoạch, tổng hợp ý tưởng. Việc cần web realtime thì AI sẽ nêu giả định (chưa nối search). Telegram: <b>@DropsipVideoBot</b> — text thường → Task Room, <code>/ceo</code> chạy cả công ty.</p></div>
     </section>
 
     <!-- CEO AGENT -->
     <section class="view" id="ceo">
-      <h1>Master CEO Agent 👑</h1><div class="sub">Quét dữ liệu thật (CRM + vận hành) → phân tích chéo → báo cáo chiến lược ngắn gọn + chờ bạn Duyệt. Chạy Groq llama-3.3-70b. Không bịa số liệu.</div>
+      <h1>Master CEO Agent 👑</h1><div class="sub">Quét dữ liệu thật (CRM + P&L + vận hành + kịch bản hiện tại) → phân tích chiến lược → trả lời trên dashboard hoặc Telegram. Không bịa số liệu.</div>
       <div class="box">
         <input id="ceoInput" placeholder="Yêu cầu cho CEO (để trống = tổng hợp tình hình tổng thể)..." style="width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff">
         <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn" onclick="genCEO()">📊 Báo cáo CEO (nhanh)</button><button class="btn" style="background:#16a34a" onclick="genRun()">▶️ Chạy cả công ty (4 phòng → CEO)</button><span id="ceoStatus" style="font-size:12px;color:var(--muted)"></span></div>
@@ -182,6 +184,7 @@
           <div id="dispatchResult" style="display:none;margin-top:12px;background:#f7f8fa;border-radius:10px;padding:12px;white-space:pre-wrap;font-size:13px;line-height:1.65;color:#2d3436"></div>
         </div>
       </div>
+      <div class="box" style="margin-top:14px"><h4>Telegram CEO Agent</h4><p style="font-size:12.5px;color:var(--muted)">Chat trực tiếp với <b>@DropsipVideoBot</b>: <code>/ceo Phân tích cho tôi lý do tại sao video hôm nay view thấp?</code>. Workflow n8n sẽ gom P&L + bản tin/kịch bản hiện tại, gọi AI, rồi trả phân tích chiến lược ngay trên Telegram. Template import: <code>workflows/ceenor-telegram-ceo-agent.n8n.json</code>.</p></div>
       <div class="box" style="margin-top:14px"><h4>🏢 Cơ cấu (Trụ cột 1: chuyên môn hoá)</h4><p style="font-size:12.5px;color:var(--muted)">CEO Agent điều phối 3 agent phòng ban: <b>Finance Controller</b> (Daily P&L), <b>Design Director</b> (/design-system + L2 render), <b>Operations Manager</b> (n8n pipeline). Mỗi agent 1 vai trò riêng → chống quá tải & hallucination. Chi tiết: agents-org.md</p></div>
     </section>
 
@@ -198,17 +201,81 @@
       <div id="logList"></div>
     </section>
 
+    <!-- CONTENT OS -->
+    <section class="view" id="contentos">
+      <h1>Content OS 🧭</h1><div class="sub">App vận hành nội dung dựa trên 4 playbook: Content Operating System, Facebook AI Brand, 6P Sales, Content Mastery. Biến ý tưởng thành kế hoạch, prompt, lịch đăng và checklist đo lường.</div>
+      <div class="grid2">
+        <div class="box"><h4>Operating System</h4><p>Content là công việc chính: brief → angle → asset → publish → đo → học lại.</p></div>
+        <div class="box"><h4>6P Sales</h4><p>Problem · Promise · Proof · Product · Price · Push.</p></div>
+        <div class="box"><h4>Facebook AI Brand</h4><p>Hook ngắn, visual rõ sản phẩm, proof mềm, CTA tự nhiên.</p></div>
+        <div class="box"><h4>Mastery Loop</h4><p>Mỗi bài có giả thuyết, KPI, kết quả, bài học và biến thể tiếp theo.</p></div>
+      </div>
+      <div class="box" style="margin-top:14px">
+        <h4>Brief chiến dịch</h4>
+        <div class="dxrow">
+          <div><label>Sản phẩm / offer</label><input id="cosProduct" placeholder="VD: Ceenor Tide mini washer"></div>
+          <div><label>Khách hàng</label><input id="cosAudience" placeholder="VD: sinh viên ở dorm, căn hộ nhỏ"></div>
+          <div><label>Mục tiêu</label><input id="cosGoal" placeholder="VD: tăng đơn, kéo lead, test angle"></div>
+          <div><label>Kênh chính</label><select id="cosChannel"><option>Facebook</option><option>TikTok</option><option>Instagram</option><option>Email</option><option>Blog SEO</option></select></div>
+        </div>
+        <div class="lbl">Insight / angle đang muốn test</div>
+        <textarea id="cosInsight" placeholder="VD: Người ở dorm không có chỗ phơi, sợ đồ ám mùi, cần giặt nhanh đồ nhỏ trong ngày." style="min-height:74px"></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="genContentOS()">🧭 Tạo Content OS</button>
+          <button class="btn ghost" onclick="copyContentOSPrompt()">Copy prompt cho CEO Agent</button>
+          <span id="cosStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+      </div>
+      <div class="box" id="cosResult" style="display:none;margin-top:14px">
+        <h4>Operating plan</h4>
+        <div id="cosBody" style="white-space:pre-wrap;font-size:13.5px;line-height:1.7;color:#2d3436"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn ghost" onclick="copyText(document.getElementById('cosBody').textContent)">Copy plan</button>
+          <button class="btn ghost" onclick="sendContentOSToDo()">Đưa sang Ra lệnh</button>
+        </div>
+      </div>
+      <div class="box" style="margin-top:14px">
+        <h4>Experiment Scorecard</h4>
+        <div class="sub" style="margin-bottom:10px">Sau khi đăng, nhập số thật để quyết định angle nào đủ căn cứ để scale.</div>
+        <div class="dxrow">
+          <div><label>Angle / hook</label><input id="cosAngle" placeholder="VD: dorm laundry pain"></div>
+          <div><label>Asset / post link</label><input id="cosAsset" placeholder="URL bài đăng hoặc tên video"></div>
+          <div><label>Spend</label><input id="cosSpend" type="number" placeholder="0"></div>
+          <div><label>Views / impressions</label><input id="cosViews" type="number" placeholder="VD: 5000"></div>
+          <div><label>3s views</label><input id="cosThreeSec" type="number" placeholder="VD: 1800"></div>
+          <div><label>Clicks</label><input id="cosClicks" type="number" placeholder="VD: 120"></div>
+          <div><label>Add to cart / leads</label><input id="cosAtc" type="number" placeholder="VD: 18"></div>
+          <div><label>Purchases</label><input id="cosPurchases" type="number" placeholder="VD: 3"></div>
+          <div><label>Revenue</label><input id="cosRevenue" type="number" placeholder="VD: 210"></div>
+          <div><label>Target CPA</label><input id="cosTargetCpa" type="number" placeholder="VD: 25"></div>
+        </div>
+        <div class="lbl">Bài học / comment intent / insight mới</div>
+        <textarea id="cosLearning" placeholder="VD: comment hỏi kích thước nhiều; hook nói 'không cần phòng giặt' giữ view tốt hơn..." style="min-height:64px"></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="btn" onclick="scoreContentExperiment()">📈 Chấm kết quả</button>
+          <button class="btn ghost" onclick="clearContentExperiments()">Xoá lịch sử local</button>
+          <span id="cosScoreStatus" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+        <div id="cosScoreResult" style="display:none;margin-top:12px"></div>
+      </div>
+      <div class="box" style="margin-top:14px">
+        <h4>Angle có căn cứ để scale</h4>
+        <div id="cosWinners" style="font-size:13px;color:#374151;line-height:1.6">Chưa có dữ liệu đo lường.</div>
+      </div>
+      <div class="box" style="margin-top:14px"><h4>Đề xuất bổ sung cho Ceenor</h4><p style="font-size:12.5px;color:var(--muted)">Nên thêm 5 bảng dữ liệu: <b>Content Briefs</b>, <b>Angle Bank</b>, <b>Asset Queue</b>, <b>Performance Log</b>, <b>Learning Library</b>. Khi nối n8n, mỗi bài đăng sẽ tự ghi KPI và CEO Agent dùng dữ liệu đó để trả lời các câu như “vì sao video hôm nay view thấp?”.</p></div>
+    </section>
+
     <!-- OVERVIEW -->
     <section class="view" id="overview">
       <h1>Overview</h1><div class="sub">Tổng quan hệ thống Ceenor.</div>
       <div class="grid2">
-        <div class="box"><div class="kpi">7 <small>skill</small></div></div>
-        <div class="box"><div class="kpi">6 <small>workflow n8n</small></div></div>
+        <div class="box"><div class="kpi" id="ovSkills">19 <small>skill</small></div></div>
+        <div class="box"><div class="kpi">30+ <small>workflow n8n</small></div></div>
         <div class="box"><div class="kpi" id="ovCust" style="color:var(--blue)">… <small>khách (live)</small></div></div>
-        <div class="box"><div class="kpi" style="color:var(--amber)">1 <small>blocker (ảnh L2)</small></div></div>
+        <div class="box"><div class="kpi" id="ovHealth" style="color:var(--green)">… <small>đang hoạt động</small></div></div>
       </div>
-      <div class="box" style="margin-top:14px"><h4>Trạng thái</h4>
-        <p>✅ Pipeline kịch bản→ảnh→QA→publish đã thông. ✅ CRM API live (Klaviyo).<br>⚠️ <b>L2 render</b>: image-gen cần bật billing (Pollinations 402 / Gemini image 429). QA+retry+brake đã sẵn sàng.</p></div>
+      <div class="box" style="margin-top:14px"><h4>Trạng thái hoạt động</h4>
+        <p id="ovStatusBox">Đang tính trạng thái...</p></div>
     </section>
 
     <!-- MISSION -->
@@ -240,8 +307,8 @@
         n8n base: <code id="baseTxt"></code><br>
         CRM webhook (live): <code id="crmTxt"></code><br>
         Form kịch bản: <a class="link" id="formLink" target="_blank">mở form</a></p></div>
-      <div class="box" style="margin-top:14px"><h4>🔐 Bảo mật</h4><p>API key n8n là JWT full-quyền — nên revoke sau mỗi phiên dùng chung. CRM webhook không lộ key (chỉ trả dữ liệu đã lọc).</p></div>
-      <div class="box" style="margin-top:14px"><h4>Phase 2 (chưa làm)</h4><p>Sync Shopify orders + Meta lead-ads vào CRM (cần Shopify credential trong n8n). Hiện Shopify hiển thị từ snapshot.</p></div>
+      <div class="box" style="margin-top:14px"><h4>🔐 Bảo mật</h4><p>Dashboard có <b>cổng mật khẩu</b> (<code>gate.js</code>) — mật khẩu chỉ gửi một lần tới <code>/webhook/ceenor-auth</code>. n8n trả session token ngắn hạn; các request sau dùng <code>Authorization: Bearer</code>. Không gửi mật khẩu qua query string. API key n8n/JWT chỉ để trong workflow/credential server-side.</p></div>
+      <div class="box" style="margin-top:14px"><h4>Ops cần cấu hình trong n8n</h4><p>P&L auto-sync Shopify/Klaviyo → Google Sheets · Pollinations token trong L2 render node · Telegram phân luồng theo hashtag/nhóm phòng ban · cảnh báo render kẹt quá 30 phút · Lead Scout Facebook Groups → Airtable → AI score → Telegram. Chi tiết triển khai nằm trong <code>docs/n8n-ops-hardening.md</code>.</p></div>
     </section>
     <!-- DIAGNOSE -->
     <section class="view" id="diagnose">
@@ -311,12 +378,11 @@
         <div style="margin-top:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="btn" onclick="genNote()">🗒️ Ghi sổ</button>
           <button class="btn ghost" onclick="document.getElementById('secNote').value='';document.getElementById('secResult').style.display='none'">Xoá</button>
-          <a class="btn ghost" href="https://docs.google.com/spreadsheets/d/1lxr_5TaFf5dUr3BGqhHHYkWWbCqitY4j1W3raI-hs6g/edit#gid=1152905859" target="_blank" style="text-decoration:none;display:inline-flex;align-items:center">📖 Mở sổ Thư ký ↗</a>
           <span id="secStatus" style="font-size:12px;color:var(--muted)"></span>
         </div>
       </div>
       <div class="box" id="secResult" style="margin-top:14px;display:none"><div id="secBody"></div></div>
-      <div class="box" style="margin-top:14px"><h4>ℹ️ Sắp bật</h4><p style="font-size:12.5px;color:var(--muted)">Nhắc tự động qua Telegram (việc đến hạn + nhắc phòng ban nộp báo cáo checklist mỗi ngày) — cần Telegram chat ID của bạn để kích hoạt.</p></div>
+      <div class="box" style="margin-top:14px"><h4>ℹ️ Telegram</h4><p style="font-size:12.5px;color:var(--muted)">Bot <b>@DropsipVideoBot</b> đã live — briefing CEO 8h sáng + nhắc việc qua workflow Thư ký Nhắc việc. Tin nhắn sẽ được phân luồng bằng hashtag: <code>#finance</code>, <code>#ops</code>, <code>#mkt</code>, <code>#sales</code>, <code>#creative</code>, <code>#product</code>, <code>#ceo</code>.</p></div>
     </section>
 
     <!-- BẢN TIN SÁNG -->
@@ -516,7 +582,7 @@ const SEED=[
 ];
 
 // ---- agents/org ----
-const AGENTS={orchestrator:{name:"Master CEO Agent",role:"Giám đốc Điều hành Ảo",icon:"👑",color:"#7c3aed",type:"Workflow n8n",wf:"47ic7Qr9Ag0YLuTX",status:"green",desc:"Quét dữ liệu thật → phân tích chéo → đề xuất A/B/C + chờ Founder Duyệt. Hai tầng: (1) skill /ceo-orchestrator điều phối 6 subagent chuyên môn (Claude Code, chạy song song); (2) CEO Agent n8n (Groq) báo cáo nhanh + nút Duyệt dashboard. Mức An toàn: chỉ tạo nháp, việc ra ngoài/chi tiền chờ Founder."}};
+const AGENTS={orchestrator:{name:"Master CEO Agent",role:"Giám đốc Điều hành Ảo",icon:"👑",color:"#7c3aed",type:"Workflow n8n",wf:"47ic7Qr9Ag0YLuTX",status:"green",desc:"Quét dữ liệu thật → phân tích chéo → đề xuất A/B/C + chờ Founder Duyệt. Hai tầng: (1) skill /ceo-orchestrator điều phối 6 subagent chuyên môn; (2) CEO Agent n8n trả lời trên dashboard/Telegram, gom P&L + kịch bản hiện tại trước khi gọi AI. Mức An toàn: chỉ tạo nháp, việc ra ngoài/chi tiền chờ Founder."}};
 const DEPTS=[
  {tag:"INTEL",color:"#0ea5e9",title:"1. Nghiên Cứu & Ý Tưởng",agents:[
   {id:"idea-analyst",name:"Idea Analyst",icon:"💡",color:"#0ea5e9",type:"Skill",cmd:"/idea-analyst",status:"green",desc:"Làm rõ ý tưởng → content brief: platform, audience, tone, hook, CTA, KPI."},
@@ -534,11 +600,12 @@ const DEPTS=[
   {id:"browser-pilot",name:"Browser Pilot",icon:"🧭",color:"#0891b2",type:"Skill",cmd:"/browser-pilot",status:"amber",desc:"Agent điều khiển browser thật (browser-use+Playwright, LLM free) click/điền form/lấy data sau login. ⚠️ rủi ro ToS khi tự đăng/login — human-approve."}]},
  {tag:"PIPELINE",color:"#16a34a",title:"4. Dây Chuyền n8n",agents:[
   {id:"wf-l1",name:"L1 · Scripting v2",icon:"📝",color:"#16a34a",type:"Workflow n8n",wf:"Pf10H0OdV06119Qb",status:"green",desc:"Form→Gemini đẻ 5 concept×2 A/B hook + Claims Gate + UTM → Sheet Draft."},
-  {id:"wf-l2",name:"L2 · Render + QA",icon:"🖼️",color:"#d97706",type:"Workflow n8n",wf:"jqrSiUrzJWjrw7W1",status:"amber",desc:"Lọc Draft (≤5) → render → QA Gemini Vision → Materials Ready / Draft_Retry. ⚠️ Render cần billing."},
+  {id:"wf-l2",name:"L2 · Render + QA",icon:"🖼️",color:"#d97706",type:"Workflow n8n",wf:"jqrSiUrzJWjrw7W1",status:"amber",desc:"Lọc Draft (≤5) → render bằng Pollinations token server-side → QA Gemini Vision → Materials Ready / Draft_Retry. ⚠️ Chỉ chuyển xanh sau 1 render + QA pass."},
   {id:"wf-l3",name:"L3 · Publish Queue",icon:"📤",color:"#15803d",type:"Workflow n8n",wf:"37EBViuOpIi5GUjE",status:"green",desc:"Watch Drive 'Video Ready' → caption → Sheet Publish Queue."},
-  {id:"wf-err",name:"Error Handler",icon:"🚨",color:"#b91c1c",type:"Workflow n8n",wf:"vQVc7Ub00YDnyMQg",status:"green",desc:"Bắt lỗi → Error Log + Telegram digest 15h."},
-  {id:"wf-pnl",name:"Daily P&L",icon:"💰",color:"#0d9488",type:"Workflow n8n",wf:"oliNlJ768x6dimDb",status:"green",desc:"Klaviyo → P&L → Dashboard."},
+  {id:"wf-err",name:"Error Handler",icon:"🚨",color:"#b91c1c",type:"Workflow n8n",wf:"vQVc7Ub00YDnyMQg",status:"green",desc:"Bắt lỗi → Error Log + Telegram digest 15h + watchdog cảnh báo L2 render kẹt quá 30 phút."},
+  {id:"wf-pnl",name:"Daily P&L",icon:"💰",color:"#0d9488",type:"Workflow n8n",wf:"oliNlJ768x6dimDb",status:"green",desc:"Shopify orders + Klaviyo attribution → Google Sheets P&L → Dashboard Finance."},
   {id:"wf-crm",name:"CRM API (webhook)",icon:"👥",color:"#7c3aed",type:"Workflow n8n",wf:"o5tyRbqecUTNAhpD",status:"green",desc:"Webhook GET /webhook/ceenor-crm → Klaviyo profiles + predictive analytics (orders/CLV/churn) → JSON live."},
+  {id:"wf-lead-scout",name:"Lead Scout · FB Groups",icon:"🔎",color:"#0ea5e9",type:"Workflow n8n",wf:"import:workflows/ceenor-lead-scout-fb-groups.n8n.json",status:"amber",desc:"Schedule/Webhook → scrape Facebook Groups → dedupe Airtable → AI score intent → lưu lead điểm cao → báo Telegram. Safe Mode: chỉ gợi ý follow-up, không tự nhắn khách."},
   {id:"wf-task",name:"Phòng Giao Việc (AI)",icon:"🤖",color:"#7c3aed",type:"Workflow n8n",wf:"5tG0W4Z9QQCHPnQ5",status:"green",desc:"Webhook POST /webhook/ceenor-task → Groq llama-3.3-70b (free) tự làm việc được giao → trả báo cáo. Giao việc ở tab 'Giao việc'."}]},
  {tag:"DATA",color:"#0d9488",title:"5. Data & Trí Nhớ",agents:[
   {id:"finance-analyst",name:"Finance Analyst",icon:"💰",color:"#0d9488",type:"Skill",cmd:"/finance-analyst",status:"green",desc:"Phân tích CSV orders/P&L bằng pandas + PandasAI(Groq free) → margin/ROAS/dự báo + cảnh báo vượt ngưỡng. Engine số liệu cho phòng Finance. Đã smoke-test."},
@@ -570,6 +637,30 @@ const gc=document.createElement('div');gc.className='card guardian';gc.onclick=(
 gc.innerHTML=`<div class="ci" style="background:${GUARDIAN.color}">${GUARDIAN.icon}</div><div><div class="nm">${GUARDIAN.name} <span class="dot ${GUARDIAN.status}"></span></div><div class="ds">${GUARDIAN.desc}</div></div>`;
 g.appendChild(gc);dEl.appendChild(g);
 document.getElementById('agentCount').textContent=Object.keys(idx).length;
+const ovSk=document.getElementById('ovSkills');if(ovSk)ovSk.innerHTML=Object.keys(idx).length+' <small>skill</small>';
+function renderOpsStatus(){
+  const all=Object.values(idx);
+  const green=all.filter(a=>a.status==='green');
+  const amber=all.filter(a=>a.status==='amber');
+  const red=all.filter(a=>a.status==='red');
+  const wf=all.filter(a=>a.type==='Workflow n8n');
+  const skills=all.filter(a=>a.type==='Skill');
+  const ovHealth=document.getElementById('ovHealth');
+  const ovStatusBox=document.getElementById('ovStatusBox');
+  if(ovHealth){
+    const color=red.length?'var(--red)':amber.length?'var(--amber)':'var(--green)';
+    ovHealth.style.color=color;
+    ovHealth.innerHTML=green.length+' <small>đang hoạt động</small>';
+  }
+  if(ovStatusBox){
+    const amberList=amber.map(a=>a.name).join(', ')||'không có';
+    const redList=red.map(a=>a.name).join(', ')||'không có';
+    ovStatusBox.innerHTML=`✅ <b>${green.length}/${all.length}</b> agent/workflow sẵn sàng · ${skills.length} skill · ${wf.length} workflow n8n.<br>
+      🟡 Cần xử lý: <b>${amber.length}</b> (${amberList}). 🔴 Blocker: <b>${red.length}</b> (${redList}).<br>
+      CRM API live qua Klaviyo; L2 Render + QA đang ở trạng thái cần xử lý vì render ảnh phụ thuộc billing/rate-limit. Cập nhật: ${new Date().toLocaleString('vi-VN')}.`;
+  }
+}
+renderOpsStatus();
 
 const lEl=document.getElementById('links');
 LINKS.forEach(l=>{const b=document.createElement('div');b.className='box';b.innerHTML=`<h4>${l.t}</h4><a class="link" href="${l.u}" target="_blank">${l.u.length>50?l.u.slice(0,50)+'…':l.u}</a>`;lEl.appendChild(b);});
@@ -577,6 +668,155 @@ document.getElementById('baseTxt').textContent=N8N_BASE;
 document.getElementById('crmTxt').textContent=CRM_WEBHOOK;
 document.getElementById('formLink').href=FORM_URL;
 const segEl=document.getElementById('segs');SEGMENTS.forEach(s=>{const e=document.createElement('span');e.className='seg';e.textContent=s;segEl.appendChild(e);});
+
+// ---- Content OS ----
+function cosData(){
+  return {
+    product:(document.getElementById('cosProduct')||{}).value?.trim()||'Sản phẩm Ceenor',
+    audience:(document.getElementById('cosAudience')||{}).value?.trim()||'khách hàng mục tiêu',
+    goal:(document.getElementById('cosGoal')||{}).value?.trim()||'tăng chuyển đổi',
+    channel:(document.getElementById('cosChannel')||{}).value||'Facebook',
+    insight:(document.getElementById('cosInsight')||{}).value?.trim()||'khách có pain rõ nhưng cần lý do tin và hành động ngay'
+  };
+}
+function contentOSPrompt(){
+  const d=cosData();
+  return `Đóng vai Ceenor Content OS + CEO Agent. Dựa trên 4 playbook: Content Operating System, Facebook AI Brand, 6P Sales, Content Mastery.
+Sản phẩm/offer: ${d.product}
+Khách hàng: ${d.audience}
+Mục tiêu: ${d.goal}
+Kênh chính: ${d.channel}
+Insight/angle: ${d.insight}
+
+Hãy tạo:
+1. Content operating plan 7 ngày.
+2. 6P sales angle: Problem, Promise, Proof, Product, Price, Push.
+3. 10 hook ngắn cho ${d.channel}.
+4. 3 prompt visual/video theo brand Ceenor.
+5. KPI cần đo và cách học lại sau mỗi bài.
+6. Việc cần Founder duyệt trước khi chạy.`;
+}
+function genContentOS(){
+  const d=cosData(), st=document.getElementById('cosStatus'), box=document.getElementById('cosResult'), body=document.getElementById('cosBody');
+  const hooks=[
+    `Bạn không cần một phòng giặt lớn để xử lý ${d.product}.`,
+    `Nếu ${d.audience} đang mất thời gian vì đồ nhỏ, đây là angle cần test.`,
+    `Pain thật: ${d.insight}`,
+    `Một thay đổi nhỏ trong routine có thể mở khóa chuyển đổi.`,
+    `Đừng bán tính năng trước, hãy bán khoảnh khắc nhẹ đầu sau khi vấn đề biến mất.`
+  ];
+  const plan=`CONTENT OS — ${d.product}
+
+Mục tiêu
+- ${d.goal}
+- Kênh chính: ${d.channel}
+- Khách hàng: ${d.audience}
+- Insight đang test: ${d.insight}
+
+6P Sales Angle
+1. Problem: ${d.audience} gặp ma sát cụ thể: ${d.insight}
+2. Promise: giải pháp nhỏ, nhanh, dễ đưa vào routine hằng ngày.
+3. Proof: dùng demo thật, before/after, phản hồi khách, cảnh quay sản phẩm không che.
+4. Product: ${d.product} là công cụ giải quyết pain, không chỉ là món đồ.
+5. Price: neo bằng thời gian/phiền phức tiết kiệm được, sau đó mới nói ưu đãi.
+6. Push: CTA mềm: xem demo, lưu lại, nhắn để nhận checklist, hoặc vào trang sản phẩm.
+
+Lịch 7 ngày
+Day 1 — Pain post: kể đúng vấn đề của ${d.audience}.
+Day 2 — Demo: quay 1 tình huống sử dụng thật, không dựng quá bóng.
+Day 3 — Proof: review/FAQ/so sánh trước-sau.
+Day 4 — Objection: xử lý nghi ngại lớn nhất về giá, kích thước, hiệu quả.
+Day 5 — Offer: đưa ưu đãi rõ, deadline nhẹ, CTA một bước.
+Day 6 — UGC angle: nội dung như khách tự kể lại.
+Day 7 — Learning recap: chọn hook thắng, nhân bản 3 biến thể.
+
+Hook bank
+- ${hooks.join('\n- ')}
+
+Prompt visual/video
+1. Product-first demo shot of ${d.product}, real ${d.audience} environment, clean lighting, clear action, no fake claims.
+2. Short vertical video: problem moment → product action → relief moment, quiet premium Ceenor tone.
+3. Facebook creative: large product signal, one pain-led headline, proof chip, soft CTA.
+
+KPI cần đo
+- 3 giây đầu: thumb-stop / view rate.
+- Nội dung: average watch time, saves, comments có intent.
+- Bán hàng: CTR, add-to-cart, checkout, purchase, CPA.
+- Learning: hook, angle, visual, CTA nào thắng.
+
+Quy tắc ra quyết định
+- SCALE: đủ evidence, có purchase, CPA đạt target hoặc ROAS đủ tốt.
+- ITERATE: có attention/intent nhưng chưa đủ hiệu quả để tăng ngân sách.
+- KILL: đủ lượt xem nhưng thumb-stop, CTR và intent đều yếu.
+
+Cadence vận hành
+- Mỗi asset phải có 1 giả thuyết rõ: angle nào sẽ thắng vì sao.
+- Sau 24-48h nhập số vào Experiment Scorecard.
+- Chỉ scale angle có căn cứ, không scale theo cảm giác.
+- Mỗi learning thắng phải tạo 2-3 biến thể mới: hook, visual, proof, CTA.
+
+Bổ sung nên thêm vào Ceenor
+- Bảng Content Briefs để lưu brief.
+- Angle Bank để lưu hook/pain/proof.
+- Asset Queue để theo dõi trạng thái ảnh/video/caption.
+- Performance Log để gom KPI sau đăng.
+- Learning Library để CEO Agent phân tích vì sao bài thắng/thua.
+
+Founder cần duyệt
+- Claim nhạy cảm.
+- Ưu đãi/giá.
+- Nội dung dùng review khách.
+- Bất kỳ hành động tự đăng hoặc chi tiền.`;
+  body.textContent=plan;
+  box.style.display='block';
+  st.textContent='✅ Đã tạo operating plan';
+}
+function copyContentOSPrompt(){ copyText(contentOSPrompt()); }
+function sendContentOSToDo(){
+  const nav=document.querySelector('.nav[data-view="do"]');
+  if(nav) nav.click();
+  setTimeout(()=>{const el=document.getElementById('doCmd'); if(el){el.value=contentOSPrompt();}},80);
+}
+function cosNum(id){return Number((document.getElementById(id)||{}).value||0)}
+function cosTxt(id){return ((document.getElementById(id)||{}).value||'').trim()}
+function cosPct(v){return isFinite(v)?(v*100).toFixed(v>=.1?1:2)+'%':'0%'}
+function cosMoney(v){return '$'+(isFinite(v)?v.toFixed(v>=100?0:2):'0')}
+function cosEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function cosStore(){try{return JSON.parse(localStorage.getItem('ceenor_content_experiments')||'[]')}catch(e){return []}}
+function cosSave(rows){localStorage.setItem('ceenor_content_experiments',JSON.stringify(rows.slice(-80)))}
+function scoreContentExperiment(){
+  const angle=cosTxt('cosAngle')||cosData().insight;
+  const asset=cosTxt('cosAsset');
+  const spend=cosNum('cosSpend'), views=cosNum('cosViews'), three=cosNum('cosThreeSec'), clicks=cosNum('cosClicks'), atc=cosNum('cosAtc'), purchases=cosNum('cosPurchases'), revenue=cosNum('cosRevenue'), targetCpa=cosNum('cosTargetCpa');
+  const learning=cosTxt('cosLearning');
+  const thumb=views?three/views:0, ctr=views?clicks/views:0, cvr=clicks?purchases/clicks:0, atcRate=clicks?atc/clicks:0, cpa=purchases&&spend?spend/purchases:0, roas=spend?revenue/spend:0;
+  let evidence=0;
+  if(views>=1000) evidence++;
+  if(clicks>=30) evidence++;
+  if(atc>=5||purchases>=1) evidence++;
+  if(learning) evidence++;
+  let decision='ITERATE', color='#d97706', reason='Có tín hiệu nhưng chưa đủ mạnh để scale.';
+  if(evidence>=3 && purchases>=1 && (!targetCpa || cpa<=targetCpa) && roas>=1.5){decision='SCALE';color='#16a34a';reason='Có đủ dữ liệu tối thiểu, đã có chuyển đổi và hiệu quả đạt ngưỡng.'}
+  else if(evidence>=2 && (thumb>=.25 || ctr>=.015) && (atc>0 || purchases>0)){decision='ITERATE';color='#d97706';reason='Angle có tín hiệu attention/intent; nên nhân bản biến thể hook, proof hoặc CTA.'}
+  else if(views>=1000 && thumb<.15 && ctr<.008 && atc===0 && purchases===0){decision='KILL';color='#dc2626';reason='Không giữ được attention và không tạo intent sau đủ lượt xem tối thiểu.'}
+  const row={at:new Date().toISOString(),angle,asset,spend,views,three,clicks,atc,purchases,revenue,targetCpa,thumb,ctr,cvr,atcRate,cpa,roas,evidence,decision,reason,learning};
+  const rows=cosStore(); rows.push(row); cosSave(rows);
+  const box=document.getElementById('cosScoreResult'), st=document.getElementById('cosScoreStatus');
+  box.style.display='block';
+  box.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="font-weight:800;color:#fff;background:${color};border-radius:20px;padding:4px 12px">${decision}</span><span class="chip">Evidence ${evidence}/4</span><span class="chip">Thumb ${cosPct(thumb)}</span><span class="chip">CTR ${cosPct(ctr)}</span><span class="chip">CVR ${cosPct(cvr)}</span><span class="chip">CPA ${cosMoney(cpa)}</span><span class="chip">ROAS ${roas.toFixed(2)}x</span></div><p style="font-size:13px;color:#374151;line-height:1.6;margin-bottom:0"><b>Lý do:</b> ${cosEsc(reason)}<br><b>Next:</b> ${decision==='SCALE'?'Tăng ngân sách 20-30%, giữ nguyên core angle, test 2 biến thể creative.':decision==='ITERATE'?'Giữ angle, đổi hook/proof/visual hoặc CTA rồi chạy lại một vòng đo.':'Dừng angle này; quay lại pain khác hoặc audience khác.'}</p>`;
+  st.textContent='✅ Đã lưu vào Performance Log local';
+  renderContentWinners();
+}
+function renderContentWinners(){
+  const el=document.getElementById('cosWinners'); if(!el)return;
+  const rows=cosStore().slice().reverse();
+  if(!rows.length){el.textContent='Chưa có dữ liệu đo lường.';return;}
+  const winners=rows.filter(r=>r.decision==='SCALE');
+  const list=(winners.length?winners:rows.slice(0,5)).slice(0,8);
+  el.innerHTML=list.map(r=>`<div style="border-top:1px solid var(--line);padding:8px 0"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${cosEsc(r.angle)}</b><span class="chip">${r.decision}</span><span class="chip">ROAS ${Number(r.roas||0).toFixed(2)}x</span><span class="chip">CTR ${cosPct(r.ctr)}</span><span class="chip">CPA ${cosMoney(r.cpa||0)}</span></div><div style="font-size:12px;color:var(--muted);margin-top:3px">${new Date(r.at).toLocaleString('vi-VN')}${r.asset?' · '+cosEsc(r.asset):''}</div>${r.learning?'<div style="font-size:12.5px;margin-top:4px"><b>Learning:</b> '+cosEsc(r.learning)+'</div>':''}</div>`).join('');
+}
+function clearContentExperiments(){localStorage.removeItem('ceenor_content_experiments');renderContentWinners();document.getElementById('cosScoreStatus').textContent='Đã xoá lịch sử local'}
+renderContentWinners();
 
 // ---- Departments ----
 const cg=document.getElementById('companyGrid');
@@ -753,8 +993,7 @@ async function genNote(){
     if(d.due_date) h+='📅 Hạn/giờ: '+esc(d.due_date+' '+(d.time||''))+'<br>';
     if(d.dept) h+='🏢 Phòng: '+esc(d.dept)+'<br>';
     if(d.note) h+='📝 '+esc(d.note)+'<br>';
-    const tabName={GiaoDich:'Giao dịch (duyệt chi)',Deadline:'Deadline / Lịch họp',ThuKy:'Thư ký'}[d.dest]||(d.dest||'Thư ký');
-    h+='</div><div style="margin-top:8px;color:#16a34a;font-size:12px">✅ Đã ghi vào tab <b>'+esc(tabName)+'</b>'+(d.remind?' · 🔔 cần nhắc':'')+' · <a href="'+(d.sheet_url||'#')+'" target="_blank" style="color:#7c3aed;font-weight:600">Mở xem ↗</a></div>';
+    h+='</div><div style="margin-top:8px;color:#16a34a;font-size:12px">✅ Đã ghi vào Sổ Thư ký'+(d.remind?' · 🔔 cần nhắc':'')+'.</div>';
     body.innerHTML=h; box.style.display='block';
     document.getElementById('secNote').value='';
     st.textContent='✅ '+new Date(d.at||Date.now()).toLocaleTimeString('vi-VN');
